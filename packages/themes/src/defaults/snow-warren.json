@@ -1,0 +1,39 @@
+{
+  "name": "Snow Warren",
+  "author": "warren-community",
+  "version": "1.0.0",
+  "colors": {
+    "background": "#f8f8f8",
+    "foreground": "#2d2d2d",
+    "cursor": "#5c6bc0",
+    "cursorAccent": "#f8f8f8",
+    "selection": "#c5cae9",
+    "black": "#2d2d2d",
+    "red": "#c62828",
+    "green": "#2e7d32",
+    "yellow": "#f57f17",
+    "blue": "#1565c0",
+    "magenta": "#6a1b9a",
+    "cyan": "#00838f",
+    "white": "#f8f8f8",
+    "brightBlack": "#757575",
+    "brightRed": "#ef5350",
+    "brightGreen": "#43a047",
+    "brightYellow": "#ffa726",
+    "brightBlue": "#1e88e5",
+    "brightMagenta": "#8e24aa",
+    "brightCyan": "#00acc1",
+    "brightWhite": "#ffffff"
+  },
+  "ui": {
+    "accent": "#5c6bc0",
+    "border": "#e0e0e0",
+    "tabBar": "#eeeeee",
+    "activeTab": "#f8f8f8"
+  },
+  "font": {
+    "family": "JetBrains Mono, SF Mono, monospace",
+    "size": 14,
+    "lineHeight": 1.5
+  }
+}

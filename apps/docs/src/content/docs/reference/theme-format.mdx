@@ -1,0 +1,142 @@
+---
+title: Theme Format
+description: Full reference for Warren's JSON theme format.
+---
+
+Warren themes are JSON files that define terminal colors, optional UI chrome colors, and font settings.
+
+## Schema
+
+```ts
+interface WarrenTheme {
+  name: string        // Display name
+  author: string      // Author or "warren-community"
+  version: string     // Semver string
+
+  colors: {
+    // Terminal background and text
+    background: string    // CSS hex color, e.g. "#1a1b26"
+    foreground: string
+    cursor: string
+    cursorAccent: string  // Color shown inside cursor (usually bg)
+    selection: string     // Selection highlight
+
+    // 16 ANSI colors
+    black: string
+    red: string
+    green: string
+    yellow: string
+    blue: string
+    magenta: string
+    cyan: string
+    white: string
+    brightBlack: string
+    brightRed: string
+    brightGreen: string
+    brightYellow: string
+    brightBlue: string
+    brightMagenta: string
+    brightCyan: string
+    brightWhite: string
+  }
+
+  ui?: {
+    accent?: string      // UI accent color (tabs, focus rings)
+    border?: string      // Panel borders
+    tabBar?: string      // Tab bar background
+    activeTab?: string   // Active tab background
+  }
+
+  font?: {
+    family?: string      // CSS font-family string
+    size?: number        // px
+    lineHeight?: number  // multiplier, e.g. 1.5
+  }
+}
+```
+
+---
+
+## Full Example: Tokyo Night
+
+```json
+{
+  "name": "Tokyo Night",
+  "author": "enkia (ported)",
+  "version": "1.0.0",
+  "colors": {
+    "background": "#1a1b26",
+    "foreground": "#a9b1d6",
+    "cursor": "#c0caf5",
+    "cursorAccent": "#1a1b26",
+    "selection": "#33467c",
+    "black": "#15161e",
+    "red": "#f7768e",
+    "green": "#9ece6a",
+    "yellow": "#e0af68",
+    "blue": "#7aa2f7",
+    "magenta": "#bb9af7",
+    "cyan": "#7dcfff",
+    "white": "#a9b1d6",
+    "brightBlack": "#414868",
+    "brightRed": "#f7768e",
+    "brightGreen": "#9ece6a",
+    "brightYellow": "#e0af68",
+    "brightBlue": "#7aa2f7",
+    "brightMagenta": "#bb9af7",
+    "brightCyan": "#7dcfff",
+    "brightWhite": "#c0caf5"
+  },
+  "ui": {
+    "accent": "#7aa2f7",
+    "border": "#292e42",
+    "tabBar": "#16161e",
+    "activeTab": "#1a1b26"
+  },
+  "font": {
+    "family": "JetBrains Mono, Fira Code, monospace",
+    "size": 14,
+    "lineHeight": 1.5
+  }
+}
+```
+
+---
+
+## Color Format
+
+All color values must be CSS hex strings:
+- `"#rrggbb"` — 6-digit hex (recommended)
+- `"#rgb"` — 3-digit shorthand
+- `"#rrggbbaa"` — with alpha (limited support)
+
+Do **not** use `rgb()`, `hsl()`, or named colors — xterm.js requires hex.
+
+---
+
+## File Naming
+
+Themes are stored as `<slug>.json` where slug is the theme name lowercased and hyphenated:
+
+```
+"name": "My Cool Theme"  →  my-cool-theme.json
+```
+
+Save custom themes to `~/.warren/themes/` or submit them as PRs to `packages/themes/src/defaults/`.
+
+---
+
+## Hyper Theme Compatibility
+
+Warren can import themes from the Hyper terminal ecosystem. See [Themes Guide](/guides/themes/).
+
+The Hyper → Warren mapping:
+
+| Hyper field | Warren field |
+|-------------|-------------|
+| `backgroundColor` | `colors.background` |
+| `foregroundColor` | `colors.foreground` |
+| `cursorColor` | `colors.cursor` |
+| `colors.black` | `colors.black` |
+| `colors.lightBlack` | `colors.brightBlack` |
+| `borderColor` | `ui.border` |

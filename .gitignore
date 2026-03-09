@@ -1,0 +1,11 @@
+node_modules
+dist
+.turbo
+.cache
+*.log
+.DS_Store
+*.dmg
+*.zip
+.env
+.env.local
+~/.warren/

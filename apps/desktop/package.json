@@ -1,0 +1,22 @@
+{
+  "name": "@warren/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "electrobun dev",
+    "build": "electrobun build",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check ."
+  },
+  "dependencies": {
+    "@warren/core": "workspace:*",
+    "@warren/types": "workspace:*",
+    "electrobun": "latest"
+  },
+  "devDependencies": {
+    "@warren/config": "workspace:*",
+    "bun-types": "latest",
+    "typescript": "latest"
+  }
+}

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#12111a" />
+    <title>Warren</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
+    <link rel="stylesheet" href="./styles/main.css" />
+    <link rel="stylesheet" href="./styles/terminal.css" />
+    <link rel="stylesheet" href="./styles/lock.css" />
+  </head>
+  <body>
+    <!-- Lock screen (shown if PIN is set) -->
+    <div id="lock-screen" class="lock-screen hidden">
+      <div class="lock-icon">(\(\<br>( -.-))</div>
+      <h1 class="lock-title">Warren</h1>
+      <div class="lock-pin-display">
+        <span class="pin-dot" id="dot-0"></span>
+        <span class="pin-dot" id="dot-1"></span>
+        <span class="pin-dot" id="dot-2"></span>
+        <span class="pin-dot" id="dot-3"></span>
+      </div>
+      <div class="lock-keypad">
+        <button class="key-btn" data-digit="1">1</button>
+        <button class="key-btn" data-digit="2">2</button>
+        <button class="key-btn" data-digit="3">3</button>
+        <button class="key-btn" data-digit="4">4</button>
+        <button class="key-btn" data-digit="5">5</button>
+        <button class="key-btn" data-digit="6">6</button>
+        <button class="key-btn" data-digit="7">7</button>
+        <button class="key-btn" data-digit="8">8</button>
+        <button class="key-btn" data-digit="9">9</button>
+        <button class="key-btn key-clear" data-digit="clear">⌫</button>
+        <button class="key-btn" data-digit="0">0</button>
+        <button class="key-btn key-empty"></button>
+      </div>
+      <p class="lock-error hidden" id="lock-error">Incorrect PIN</p>
+    </div>
+
+    <!-- Config screen (home screen) -->
+    <div id="config-screen" class="screen hidden">
+      <header class="config-header">
+        <h1 class="app-title">Warren</h1>
+        <button class="icon-btn" id="btn-add-host" title="Add host">+</button>
+      </header>
+
+      <div class="host-list" id="host-list">
+        <!-- Host cards injected by JS -->
+        <div class="empty-host-state" id="empty-state">
+          <div class="empty-icon">(\(\<br>( -.-))</div>
+          <p>No hosts yet</p>
+          <button class="btn-primary" id="btn-add-first">Add a Host</button>
+        </div>
+      </div>
+
+      <!-- Add host modal -->
+      <div class="modal hidden" id="add-host-modal">
+        <div class="modal-content">
+          <h2>Add Host</h2>
+          <div class="form-group">
+            <label>Host address</label>
+            <input type="text" id="input-host" placeholder="192.168.1.100:9470" />
+          </div>
+          <div class="form-group">
+            <label>Token</label>
+            <input type="password" id="input-token" placeholder="Paste token from host" />
+          </div>
+          <div class="modal-actions">
+            <button class="btn-ghost" id="btn-cancel-add">Cancel</button>
+            <button class="btn-primary" id="btn-confirm-add">Connect</button>
+          </div>
+          <p style="font-size: 11px; color: #8b7fb8; margin-top: 12px; text-align: center">
+            TODO: QR scanner coming in v0.2
+          </p>
+        </div>
+      </div>
+
+      <footer class="config-footer">
+        <button class="footer-btn active" id="nav-hosts">Hosts</button>
+        <button class="footer-btn" id="nav-settings-btn">Settings</button>
+      </footer>
+
+      <!-- Settings panel -->
+      <div class="settings-panel hidden" id="settings-panel">
+        <h2 class="settings-title">Settings</h2>
+        <div class="setting-row">
+          <span>Theme</span>
+          <select id="theme-select" class="setting-select">
+            <option value="tokyo-night">Tokyo Night</option>
+            <option value="rabbit-hole">Rabbit Hole</option>
+            <option value="snow-warren">Snow Warren</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <span>PIN Lock</span>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="pin-toggle" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row hidden" id="pin-set-row">
+          <span>Set PIN</span>
+          <button class="btn-ghost-sm" id="btn-set-pin">Change PIN</button>
+        </div>
+        <div style="margin-top: 24px; font-size: 11px; color: #4a3f6b; text-align: center">
+          Warren v0.1.0 · MIT
+        </div>
+      </div>
+    </div>
+
+    <!-- Terminal screen -->
+    <div id="terminal-screen" class="screen hidden">
+      <!-- Session tab bar -->
+      <div class="session-tabs" id="session-tabs">
+        <!-- Tabs injected by JS -->
+      </div>
+
+      <!-- xterm.js container -->
+      <div id="terminal-container"></div>
+
+      <!-- Touch toolbar -->
+      <div class="touch-toolbar" id="touch-toolbar">
+        <button class="tool-btn" data-action="esc">Esc</button>
+        <button class="tool-btn" data-action="ctrl">Ctrl</button>
+        <button class="tool-btn" data-action="alt">Alt</button>
+        <button class="tool-btn" data-action="tab">Tab</button>
+        <button class="tool-btn" data-action="up">↑</button>
+        <button class="tool-btn" data-action="down">↓</button>
+        <button class="tool-btn" data-action="left">←</button>
+        <button class="tool-btn" data-action="right">→</button>
+        <button class="tool-btn" data-action="pipe">|</button>
+        <button class="tool-btn" data-action="back">⌂</button>
+      </div>
+    </div>
+
+    <script type="module" src="./scripts/main.ts"></script>
+  </body>
+</html>

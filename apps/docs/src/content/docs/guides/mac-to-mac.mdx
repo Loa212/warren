@@ -1,0 +1,53 @@
+---
+title: Mac to Mac
+description: Connect one Mac to another using Warren's controller mode.
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components'
+
+Warren's Mac app runs in both host and controller mode simultaneously. This means you can connect one Mac to another — use your MacBook to get a shell on your desktop Mac.
+
+---
+
+## Setup
+
+<Steps>
+1. **Enable host mode on Mac A** (the one you want to connect *to*).
+
+   Warren tray → verify 🟡 or 🟢 status.
+
+2. **On Mac B** (the controller), open the Warren Dashboard.
+
+   Dashboard → **Connections** tab → **Add Connection**.
+
+3. **Enter Mac A's address:**
+   - On LAN: `192.168.x.x:9470` (Mac A's IP)
+   - Remote: Mac A's Cloudflare/Tailscale address
+
+4. **Enter the token** shown in Mac A's tray menu, or scan the QR code.
+
+5. A terminal tab opens in the Dashboard. You're in Mac A's shell.
+</Steps>
+
+<Aside type="note">
+Bonjour auto-discovery (v0.2) will eliminate manual IP entry on the LAN. Warren will show nearby hosts automatically.
+</Aside>
+
+---
+
+## Multiple Hops
+
+Warren does not relay traffic. If you need Mac B → Mac C via Mac A, you have two options:
+
+1. **Direct pairing:** Pair Mac B with Mac C directly. This is preferred — no intermediary.
+2. **SSH through the terminal:** Connect to Mac A, then `ssh macC` from the terminal.
+
+This is intentional. Warren's security model prohibits transitive access.
+
+---
+
+## Use Cases
+
+- **Development:** Keep a shell open to your always-on desktop Mac from your laptop
+- **Home lab:** Manage multiple machines from one Warren dashboard
+- **On-call:** Connect to production-adjacent machines from your phone in an emergency (via Tailscale)

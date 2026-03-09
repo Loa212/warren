@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <rect width="192" height="192" rx="40" fill="#12111a"/>
+  <!-- Warren rabbit icon — minimal geometric -->
+  <g transform="translate(96, 96)">
+    <!-- Body -->
+    <ellipse cx="0" cy="20" rx="30" ry="38" fill="#b794f4"/>
+    <!-- Head -->
+    <ellipse cx="0" cy="-24" rx="26" ry="24" fill="#b794f4"/>
+    <!-- Left ear -->
+    <ellipse cx="-12" cy="-62" rx="7" ry="22" fill="#b794f4"/>
+    <ellipse cx="-12" cy="-62" rx="4" ry="17" fill="#c084fc" opacity="0.6"/>
+    <!-- Right ear -->
+    <ellipse cx="12" cy="-62" rx="7" ry="22" fill="#b794f4"/>
+    <ellipse cx="12" cy="-62" rx="4" ry="17" fill="#c084fc" opacity="0.6"/>
+    <!-- Eyes -->
+    <circle cx="-9" cy="-28" r="4" fill="#12111a"/>
+    <circle cx="9" cy="-28" r="4" fill="#12111a"/>
+    <circle cx="-7.5" cy="-29.5" r="1.5" fill="#d4c8f0"/>
+    <circle cx="10.5" cy="-29.5" r="1.5" fill="#d4c8f0"/>
+    <!-- Nose -->
+    <ellipse cx="0" cy="-16" rx="3" ry="2" fill="#f28b82"/>
+  </g>
+</svg>

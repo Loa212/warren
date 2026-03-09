@@ -1,0 +1,103 @@
+---
+title: Config Reference
+description: Warren configuration file format and all available options.
+---
+
+## Config File Location
+
+Warren stores its configuration at:
+
+```
+~/.warren/config.json
+```
+
+The file is created automatically on first run with defaults. You can edit it manually or through the Dashboard Settings tab.
+
+---
+
+## Full Config Example
+
+```json
+{
+  "nodeId": "a1b2c3d4-...",
+  "hostMode": true,
+  "shell": "/bin/zsh",
+  "port": 9470,
+  "theme": "tokyo-night",
+  "logging": false,
+  "pin": null
+}
+```
+
+---
+
+## Options
+
+### `nodeId`
+**Type:** `string` (UUID)
+**Default:** auto-generated on first run
+
+Unique identifier for this node. Do not edit manually — changing this will break pairing with other devices.
+
+---
+
+### `hostMode`
+**Type:** `boolean`
+**Default:** `true`
+
+When `true`, Warren accepts incoming connections from paired devices. When `false`, no connections are accepted and no PTY sessions can be created.
+
+Toggle via tray icon or Dashboard → Settings.
+
+---
+
+### `shell`
+**Type:** `string`
+**Default:** `$SHELL` or `/bin/zsh`
+
+The default shell spawned for new sessions. Examples: `/bin/zsh`, `/bin/bash`, `/usr/local/bin/fish`.
+
+---
+
+### `port`
+**Type:** `number`
+**Default:** `9470`
+
+The TCP port Warren listens on for WebSocket connections. Also serves the PWA static files.
+
+If you change this, update any saved host entries on your controller devices.
+
+---
+
+### `theme`
+**Type:** `string`
+**Default:** `"tokyo-night"`
+
+The active theme name. Corresponds to a file in `packages/themes/src/defaults/` or `~/.warren/themes/`.
+
+---
+
+### `logging`
+**Type:** `boolean`
+**Default:** `false`
+
+When `true`, Warren records session I/O to `~/.warren/logs/`. Opt-in only — Warren does not log by default.
+
+---
+
+### `pin`
+**Type:** `string | null`
+**Default:** `null`
+
+SHA-256 hash of the PWA lock PIN. Managed by the PWA — do not set manually.
+
+---
+
+## Other Files
+
+| Path | Contents |
+|------|----------|
+| `~/.warren/config.json` | Main config |
+| `~/.warren/themes/` | Custom theme JSON files |
+| `~/.warren/logs/` | Session logs (if enabled) |
+| `~/.warren/devices.db` | Paired device trust store (v0.2+, SQLite) |

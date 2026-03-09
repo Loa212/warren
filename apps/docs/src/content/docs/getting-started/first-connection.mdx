@@ -1,0 +1,85 @@
+---
+title: First Connection
+description: Pair your phone to your Mac and open a terminal session step by step.
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components'
+
+This guide walks you through connecting your phone to your Mac for the first time.
+
+**Prerequisites:** Warren installed on your Mac ([Installation](/getting-started/installation/)), phone on the same Wi-Fi.
+
+---
+
+## Step by Step
+
+<Steps>
+1. **Start Warren on your Mac.**
+
+   Click the Warren icon in the menu bar. You should see:
+   - 🟡 Yellow dot = host mode active, no connections
+
+   If you see ⚫, click the icon and enable **Host Mode**.
+
+2. **Show the QR code.**
+
+   Click the Warren tray icon → **Show QR Code**.
+
+   A window appears with a QR code and a 6-digit numeric PIN (fallback for manual entry).
+
+3. **Open the PWA on your phone.**
+
+   Point your phone's camera at the QR code. It opens `warren.sh` (or your host's local address) in your browser.
+
+   > **No camera?** Tap **Enter PIN manually** and type the 6 digits shown on your Mac.
+
+4. **Approve the pairing on your Mac.**
+
+   A notification appears on your Mac: _"iPhone wants to pair."_ Click **Allow**.
+
+   The tray icon turns 🟢 — a device is now connected.
+
+5. **Open a terminal.**
+
+   In the PWA, your Mac appears in the host list. Tap it.
+
+   A terminal session opens. You're in your Mac's default shell.
+</Steps>
+
+---
+
+## What Just Happened
+
+Behind the scenes, Warren:
+
+1. Generated a one-time QR code containing a pairing nonce + your Mac's local IP
+2. Your phone sent the nonce back + its X25519 public key (v0.2+)
+3. Your Mac verified the nonce, performed ECDH key exchange
+4. Both devices derived a shared secret — stored locally, never transmitted
+5. Future connections authenticate using this shared secret
+
+In v0.1, the QR code contains a static token (simplified for the proof of concept). Full X25519 pairing arrives in v0.2.
+
+---
+
+## Troubleshooting
+
+**Phone can't see the QR / can't reach the host**
+- Confirm both devices are on the same Wi-Fi network
+- Check that Warren's port (default 9470) is not blocked by a firewall
+- On the Mac, go to Settings → verify the port matches
+
+**"Connection refused" in the PWA**
+- Confirm Warren's host mode is enabled (🟡 or 🟢 tray icon)
+- Try entering the host's IP manually: `192.168.x.x:9470`
+
+**Auth failed**
+- The token may have expired or been regenerated — show a new QR code and retry
+
+**Terminal appears but input doesn't work**
+- The virtual keyboard may be hiding. Tap the terminal to focus it.
+- If on iOS, ensure the browser is not in reader mode.
+
+<Aside type="tip">
+For persistent remote access (outside your LAN), see [Remote Access](/guides/remote-access/).
+</Aside>

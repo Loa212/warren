@@ -1,0 +1,39 @@
+{
+  "name": "Rabbit Hole",
+  "author": "warren-community",
+  "version": "1.0.0",
+  "colors": {
+    "background": "#12111a",
+    "foreground": "#d4c8f0",
+    "cursor": "#b794f4",
+    "cursorAccent": "#12111a",
+    "selection": "#3d2b6b",
+    "black": "#0e0d14",
+    "red": "#f28b82",
+    "green": "#a8d8a8",
+    "yellow": "#f6c177",
+    "blue": "#9d7fe3",
+    "magenta": "#c084fc",
+    "cyan": "#76d4d4",
+    "white": "#d4c8f0",
+    "brightBlack": "#4a3f6b",
+    "brightRed": "#f4a4a0",
+    "brightGreen": "#b8e8b8",
+    "brightYellow": "#f8d08a",
+    "brightBlue": "#b09ef5",
+    "brightMagenta": "#d0a0ff",
+    "brightCyan": "#96e0e0",
+    "brightWhite": "#e8e0f8"
+  },
+  "ui": {
+    "accent": "#b794f4",
+    "border": "#2d2545",
+    "tabBar": "#0e0d14",
+    "activeTab": "#1e1b2e"
+  },
+  "font": {
+    "family": "JetBrains Mono, Cascadia Code, monospace",
+    "size": 14,
+    "lineHeight": 1.5
+  }
+}

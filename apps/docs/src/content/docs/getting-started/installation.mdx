@@ -1,0 +1,100 @@
+---
+title: Installation
+description: Install Warren on your Mac and phone.
+---
+
+import { Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components'
+
+Warren has two components:
+
+1. **The Mac app** — menu bar app (Electrobun), acts as host and/or controller
+2. **The PWA** — phone/tablet terminal client, served from any Warren host or from warren.sh
+
+---
+
+## Mac App
+
+<Steps>
+1. **Download** the latest release from [github.com/warren-sh/warren/releases](https://github.com/warren-sh/warren/releases).
+
+   Or install via Homebrew (coming soon):
+   ```bash
+   brew install --cask warren
+   ```
+
+2. **Open** `Warren.app`. On first launch, macOS may ask for permission — click Open.
+
+3. **Allow network access** when prompted. Warren needs to listen on port 9470 (configurable).
+
+4. The Warren rabbit appears in your **menu bar**. Click it to confirm it's running.
+</Steps>
+
+<Aside type="note">
+Warren is not yet notarized (v1.0 target). You may need to right-click → Open on first launch to bypass Gatekeeper.
+</Aside>
+
+### System Requirements
+
+- macOS 13 Ventura or later (Apple Silicon + Intel)
+- Bun runtime (bundled — no separate install required)
+- Port 9470 available (configurable in Settings)
+
+---
+
+## Phone PWA
+
+The PWA runs in any modern mobile browser. No App Store required.
+
+<Tabs>
+  <TabItem label="On your LAN">
+    If your phone is on the same Wi-Fi as your Mac:
+
+    1. On your Mac, click the Warren tray icon → **Show QR Code**
+    2. Scan the QR with your phone's camera
+    3. The PWA opens automatically in your browser
+    4. **Add to Home Screen** for a native app experience
+  </TabItem>
+  <TabItem label="Standalone">
+    If you want to use the PWA from the internet (requires a tunnel):
+
+    1. Open `warren.sh` on your phone
+    2. Enter your host's address and token manually
+    3. See [Remote Access](/guides/remote-access/) for tunnel setup
+  </TabItem>
+</Tabs>
+
+### PWA Browser Support
+
+| Browser | iOS | Android |
+|---------|-----|---------|
+| Safari | ✅ | — |
+| Chrome | — | ✅ |
+| Firefox | ✅ | ✅ |
+
+<Aside type="tip">
+On iOS, use Safari to **Add to Home Screen** for the best PWA experience. Chrome on iOS cannot install PWAs.
+</Aside>
+
+---
+
+## Building from Source
+
+```bash
+# Prerequisites: Bun 1.1+, Node.js 20+ (for some tooling)
+git clone https://github.com/warren-sh/warren
+cd warren
+
+bun install
+
+# Run the PWA dev server (accessible from your phone on LAN)
+bun run dev --filter=@warren/web
+# → http://YOUR_IP:3000
+
+# Run the docs
+bun run dev --filter=@warren/docs
+
+# Build everything
+bun run build
+```
+
+For the desktop app, see [apps/desktop/README.md](https://github.com/warren-sh/warren/blob/main/apps/desktop/README.md) — Electrobun requires a one-time init step.

@@ -1,0 +1,66 @@
+---
+title: CLI Reference
+description: Warren command-line interface reference.
+---
+
+import { Aside } from '@astrojs/starlight/components'
+
+<Aside type="caution">
+The Warren CLI is planned for v1.0 and is not yet implemented. This page documents the intended interface.
+</Aside>
+
+The Warren CLI provides headless/scripting access to all Warren functionality.
+
+## Host Management
+
+```bash
+warren host start          # Enable host mode
+warren host stop           # Disable host mode
+warren host status         # Show status + connected devices
+```
+
+## Pairing
+
+```bash
+warren pair                # Show QR code + PIN for pairing
+warren pair --pin-only     # PIN only (no QR, for SSH sessions)
+```
+
+## Device Management
+
+```bash
+warren devices                 # List paired devices
+warren devices revoke <id>     # Revoke a device's access
+```
+
+## Connections (Controller Mode)
+
+```bash
+warren connect <host>      # Connect to a host
+warren sessions            # List active sessions
+```
+
+## Themes
+
+```bash
+warren theme list                  # List installed themes
+warren theme set <name>            # Activate a theme
+warren theme import <hyper-theme>  # Import a Hyper ecosystem theme
+warren theme create <name>         # Scaffold a new theme
+```
+
+## Tunnel Management
+
+```bash
+warren tunnel status       # Show tunnel health
+warren tunnel setup        # Interactive tunnel setup guide
+```
+
+## Global Flags
+
+| Flag | Description |
+|------|-------------|
+| `--config <path>` | Use a custom config file path |
+| `--port <n>` | Override the default port (9470) |
+| `--json` | Output in JSON format (for scripting) |
+| `--quiet` | Suppress non-error output |

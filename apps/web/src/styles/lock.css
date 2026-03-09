@@ -1,0 +1,101 @@
+/* Warren PWA — Lock screen styles */
+
+.lock-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 40px 24px;
+  padding-top: calc(var(--safe-top) + 60px);
+  padding-bottom: calc(var(--safe-bottom) + 24px);
+}
+
+.lock-icon {
+  font-family: monospace;
+  font-size: 18px;
+  line-height: 1.4;
+  color: var(--accent);
+  margin-bottom: 8px;
+  text-align: center;
+  white-space: pre-line;
+}
+
+.lock-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--text);
+  margin-bottom: 40px;
+}
+
+.lock-pin-display {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.pin-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--bg3);
+  border: 2px solid var(--border);
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.pin-dot.filled {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.lock-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-width: 280px;
+}
+
+.key-btn {
+  height: 72px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 24px;
+  font-weight: 300;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.08s;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.key-btn:active {
+  background: var(--bg3);
+  color: var(--accent);
+}
+
+.key-clear {
+  font-size: 18px;
+  color: var(--muted);
+}
+
+.key-empty {
+  background: transparent;
+  border-color: transparent;
+  pointer-events: none;
+}
+
+.lock-error {
+  margin-top: 20px;
+  font-size: 13px;
+  color: var(--red);
+  text-align: center;
+}

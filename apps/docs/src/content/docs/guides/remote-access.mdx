@@ -1,0 +1,112 @@
+---
+title: Remote Access
+description: Access your Warren host from outside your LAN using Cloudflare Tunnel or Tailscale.
+---
+
+import { Tabs, TabItem, Steps, Aside, Card, CardGrid } from '@astrojs/starlight/components'
+
+Warren is local-first. By default, it works only on your LAN. For remote access, you configure your own tunnel — Warren never sees your traffic.
+
+<CardGrid>
+  <Card title="Cloudflare Tunnel" icon="cloudflare">
+    Free, no open ports, works behind NAT. Best for phone → Mac.
+  </Card>
+  <Card title="Tailscale" icon="network">
+    Mesh VPN. Warren auto-discovered on your tailnet. Best for Mac ↔ Mac.
+  </Card>
+</CardGrid>
+
+---
+
+## Cloudflare Tunnel
+
+Cloudflare Tunnel creates a secure connection from your Mac to Cloudflare's edge — no port forwarding, no static IP.
+
+<Steps>
+1. **Install `cloudflared`:**
+   ```bash
+   brew install cloudflared
+   ```
+
+2. **Authenticate with Cloudflare:**
+   ```bash
+   cloudflared tunnel login
+   ```
+
+3. **Create a tunnel:**
+   ```bash
+   cloudflared tunnel create warren
+   ```
+
+4. **Configure the tunnel** — create `~/.cloudflared/config.yml`:
+   ```yaml
+   tunnel: warren
+   credentials-file: /Users/YOU/.cloudflared/TUNNEL_ID.json
+
+   ingress:
+     - hostname: warren.yourdomain.com
+       service: http://localhost:9470
+     - service: http_status:404
+   ```
+
+5. **Route DNS:**
+   ```bash
+   cloudflared tunnel route dns warren warren.yourdomain.com
+   ```
+
+6. **Start the tunnel:**
+   ```bash
+   cloudflared tunnel run warren
+   ```
+
+7. **Connect from your phone:**
+   In the Warren PWA, add a host with address `warren.yourdomain.com:443` (use `wss://`).
+</Steps>
+
+<Aside type="tip">
+Run `cloudflared` as a launchd service to start it automatically on login:
+```bash
+sudo cloudflared service install
+```
+</Aside>
+
+---
+
+## Tailscale
+
+Tailscale creates a mesh VPN between your devices. Warren runs on your tailnet and is discoverable via mDNS (v0.2+).
+
+<Steps>
+1. **Install Tailscale** on both devices: [tailscale.com/download](https://tailscale.com/download)
+
+2. **Join the same tailnet** — sign in with the same account on both devices.
+
+3. **Find your Mac's Tailscale IP:**
+   ```bash
+   tailscale ip -4
+   # → 100.x.x.x
+   ```
+
+4. **Connect from your phone:**
+   In the Warren PWA, add host: `100.x.x.x:9470` (your Mac's Tailscale IP).
+</Steps>
+
+Tailscale handles NAT traversal and encryption at the network layer. Warren's own authentication still runs on top.
+
+---
+
+## Health Endpoint
+
+Warren exposes `GET /health` on its HTTP port:
+
+```json
+{
+  "status": "ok",
+  "version": "0.1.0",
+  "nodeId": "...",
+  "uptime": 3600,
+  "sessions": 2
+}
+```
+
+Configure Cloudflare health checks or Tailscale's built-in monitoring to hit `/health`.

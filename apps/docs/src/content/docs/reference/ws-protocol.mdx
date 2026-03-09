@@ -1,0 +1,191 @@
+---
+title: WebSocket Protocol
+description: The Warren WebSocket message protocol reference.
+---
+
+Warren uses a JSON-framed WebSocket protocol for all terminal communication. Every message is a JSON object with a `type` discriminant field.
+
+## Connection
+
+```
+ws://HOST:PORT/ws?token=TOKEN
+```
+
+- **HOST** — the Warren host's IP or domain
+- **PORT** — default 9470
+- **TOKEN** — the authentication token (v0.1 static token; v0.2+ cryptographic)
+
+The server upgrades HTTP connections to WebSocket on the `/ws` path.
+
+---
+
+## Authentication Handshake
+
+Authentication happens immediately on connection, before any session can be created.
+
+```
+Client                        Server
+  │                               │
+  │  [connect]                    │
+  │──────────────────────────────>│
+  │                               │
+  │  auth:challenge               │
+  │<──────────────────────────────│  { type, nonce }
+  │                               │
+  │  auth:response                │
+  │──────────────────────────────>│  { type, signature, deviceId }
+  │                               │
+  │  auth:success                 │
+  │<──────────────────────────────│
+  │                               │
+  │  [ready for session messages] │
+```
+
+### `auth:challenge`
+Sent by server immediately on WebSocket open.
+
+```json
+{ "type": "auth:challenge", "nonce": "uuid-string" }
+```
+
+### `auth:response`
+Sent by client in response to the challenge.
+
+```json
+{
+  "type": "auth:response",
+  "signature": "token-or-signed-nonce",
+  "deviceId": "client-uuid"
+}
+```
+
+In v0.1, `signature` is the static token. In v0.2+, it will be a cryptographic signature of the nonce using the device's private key.
+
+### `auth:success`
+Authentication succeeded. Client may now create sessions.
+
+```json
+{ "type": "auth:success" }
+```
+
+### `auth:failure`
+Authentication failed. Server closes the connection.
+
+```json
+{ "type": "auth:failure", "reason": "Invalid token" }
+```
+
+---
+
+## Session Lifecycle
+
+```
+Client                        Server
+  │                               │
+  │  session:create               │
+  │──────────────────────────────>│  { type, shell? }
+  │                               │
+  │  session:created              │
+  │<──────────────────────────────│  { type, session: TerminalSession }
+  │                               │
+  │  terminal:data (both ways)    │
+  │<══════════════════════════════│
+  │                               │
+  │  terminal:resize              │
+  │──────────────────────────────>│  { type, sessionId, cols, rows }
+  │                               │
+  │  session:kill                 │
+  │──────────────────────────────>│  { type, sessionId }
+  │                               │
+  │  session:ended                │
+  │<──────────────────────────────│  { type, sessionId }
+```
+
+### `session:create`
+Create a new PTY session.
+
+```json
+{ "type": "session:create", "shell": "/bin/zsh" }
+```
+
+`shell` is optional — defaults to the server's configured shell.
+
+### `session:created`
+Server confirms session creation.
+
+```json
+{
+  "type": "session:created",
+  "session": {
+    "id": "uuid",
+    "deviceId": "client-uuid",
+    "shell": "/bin/zsh",
+    "startedAt": 1700000000000,
+    "cols": 80,
+    "rows": 24
+  }
+}
+```
+
+### `terminal:data`
+Terminal I/O — sent in both directions.
+
+```json
+{ "type": "terminal:data", "sessionId": "uuid", "data": "ls -la\r\n" }
+```
+
+`data` is raw terminal data (UTF-8 string). Client→Server is user keystrokes. Server→Client is shell output.
+
+### `terminal:resize`
+Notify the PTY of a terminal resize.
+
+```json
+{ "type": "terminal:resize", "sessionId": "uuid", "cols": 120, "rows": 40 }
+```
+
+### `session:kill`
+Kill a session.
+
+```json
+{ "type": "session:kill", "sessionId": "uuid" }
+```
+
+### `session:ended`
+Session has ended (from kill or natural exit).
+
+```json
+{ "type": "session:ended", "sessionId": "uuid" }
+```
+
+---
+
+## Keepalive
+
+```json
+{ "type": "ping" }   // client → server
+{ "type": "pong" }   // server → client
+```
+
+Clients should send a ping every 30 seconds to keep the connection alive through NAT.
+
+---
+
+## TypeScript Types
+
+```ts
+type WsMessage =
+  | { type: 'terminal:data'; sessionId: string; data: string }
+  | { type: 'terminal:resize'; sessionId: string; cols: number; rows: number }
+  | { type: 'session:create'; shell?: string }
+  | { type: 'session:created'; session: TerminalSession }
+  | { type: 'session:kill'; sessionId: string }
+  | { type: 'session:ended'; sessionId: string }
+  | { type: 'auth:challenge'; nonce: string }
+  | { type: 'auth:response'; signature: string; deviceId: string }
+  | { type: 'auth:success' }
+  | { type: 'auth:failure'; reason: string }
+  | { type: 'ping' }
+  | { type: 'pong' }
+```
+
+Import from `@warren/types` in any Warren package.

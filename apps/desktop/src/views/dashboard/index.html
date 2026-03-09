@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Warren Dashboard</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #12111a;
+        --bg-secondary: #1e1b2e;
+        --bg-tertiary: #2d2545;
+        --text: #d4c8f0;
+        --text-muted: #8b7fb8;
+        --accent: #b794f4;
+        --accent-dim: #6d5da8;
+        --border: #2d2545;
+        --green: #a8d8a8;
+        --red: #f28b82;
+        --yellow: #f6c177;
+        --sidebar-width: 200px;
+        --title-bar-height: 36px;
+      }
+
+      html,
+      body {
+        height: 100%;
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 13px;
+        overflow: hidden;
+        user-select: none;
+      }
+
+      /* Title bar drag area */
+      .title-bar {
+        height: var(--title-bar-height);
+        background: var(--bg);
+        -webkit-app-region: drag;
+        display: flex;
+        align-items: center;
+        padding: 0 80px 0 20px;
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+
+      .title-bar h1 {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-muted);
+        letter-spacing: 0.05em;
+      }
+
+      .app-layout {
+        display: flex;
+        height: calc(100% - var(--title-bar-height));
+      }
+
+      /* Sidebar */
+      .sidebar {
+        width: var(--sidebar-width);
+        background: var(--bg);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        padding: 8px 0;
+        flex-shrink: 0;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 16px;
+        cursor: pointer;
+        border-radius: 6px;
+        margin: 0 8px;
+        color: var(--text-muted);
+        font-size: 13px;
+        transition: background 0.1s, color 0.1s;
+        -webkit-app-region: no-drag;
+      }
+
+      .nav-item:hover {
+        background: var(--bg-secondary);
+        color: var(--text);
+      }
+
+      .nav-item.active {
+        background: var(--bg-tertiary);
+        color: var(--accent);
+      }
+
+      .nav-item .icon {
+        font-size: 15px;
+        width: 18px;
+        text-align: center;
+      }
+
+      /* Main content */
+      .main-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
+      }
+
+      .tab-panel {
+        display: none;
+      }
+
+      .tab-panel.active {
+        display: block;
+      }
+
+      /* Section header */
+      .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+
+      .section-header h2 {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      /* Card */
+      .card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 12px;
+      }
+
+      .card-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .card-title {
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 4px;
+      }
+
+      .card-subtitle {
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+
+      /* Status dot */
+      .status {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 6px;
+      }
+
+      .status-online {
+        background: var(--green);
+        box-shadow: 0 0 6px var(--green);
+      }
+
+      .status-offline {
+        background: var(--text-muted);
+      }
+
+      /* Button */
+      .btn {
+        padding: 5px 12px;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 500;
+        transition: opacity 0.1s;
+      }
+
+      .btn:hover {
+        opacity: 0.85;
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: #12111a;
+      }
+
+      .btn-danger {
+        background: var(--red);
+        color: #12111a;
+      }
+
+      .btn-ghost {
+        background: var(--bg-tertiary);
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+      }
+
+      /* Empty state */
+      .empty-state {
+        text-align: center;
+        padding: 48px 24px;
+        color: var(--text-muted);
+      }
+
+      .empty-state .icon {
+        font-size: 32px;
+        margin-bottom: 12px;
+      }
+
+      /* Settings form */
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-label {
+        display: block;
+        font-weight: 500;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .form-input {
+        width: 100%;
+        max-width: 300px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        color: var(--text);
+        padding: 7px 10px;
+        font-size: 13px;
+        outline: none;
+        transition: border-color 0.1s;
+      }
+
+      .form-input:focus {
+        border-color: var(--accent-dim);
+      }
+
+      .toggle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+      }
+
+      .toggle input[type='checkbox'] {
+        width: 36px;
+        height: 20px;
+        appearance: none;
+        background: var(--bg-tertiary);
+        border-radius: 10px;
+        cursor: pointer;
+        position: relative;
+        transition: background 0.2s;
+      }
+
+      .toggle input[type='checkbox']:checked {
+        background: var(--accent-dim);
+      }
+
+      .toggle input[type='checkbox']::after {
+        content: '';
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        background: var(--text);
+        border-radius: 50%;
+        top: 3px;
+        left: 3px;
+        transition: transform 0.2s;
+      }
+
+      .toggle input[type='checkbox']:checked::after {
+        transform: translateX(16px);
+      }
+
+      /* Error banner */
+      .error-banner {
+        background: rgba(242, 139, 130, 0.15);
+        border: 1px solid var(--red);
+        border-radius: 6px;
+        padding: 10px 14px;
+        margin-bottom: 16px;
+        color: var(--red);
+        font-size: 12px;
+        display: none;
+      }
+
+      .error-banner.show {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="title-bar">
+      <h1>WARREN</h1>
+    </div>
+
+    <div class="app-layout">
+      <!-- Sidebar Navigation -->
+      <nav class="sidebar">
+        <div class="nav-item active" data-tab="devices">
+          <span class="icon">⬡</span>
+          Devices
+        </div>
+        <div class="nav-item" data-tab="sessions">
+          <span class="icon">▸</span>
+          Sessions
+        </div>
+        <div class="nav-item" data-tab="tunnels">
+          <span class="icon">⤨</span>
+          Tunnels
+        </div>
+        <div class="nav-item" data-tab="settings">
+          <span class="icon">⚙</span>
+          Settings
+        </div>
+      </nav>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <div id="error-banner" class="error-banner"></div>
+
+        <!-- Devices Tab -->
+        <section id="tab-devices" class="tab-panel active">
+          <div class="section-header">
+            <h2>Devices</h2>
+            <button class="btn btn-primary" onclick="pairNewDevice()">+ Pair Device</button>
+          </div>
+          <div id="devices-list">
+            <div class="empty-state">
+              <div class="icon">📱</div>
+              <p>No paired devices yet</p>
+              <p style="font-size: 11px; margin-top: 6px">
+                Click "Pair Device" or use the tray icon to show a QR code
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Sessions Tab -->
+        <section id="tab-sessions" class="tab-panel">
+          <div class="section-header">
+            <h2>Active Sessions</h2>
+            <button class="btn btn-ghost" onclick="refreshSessions()">↻ Refresh</button>
+          </div>
+          <div id="sessions-list">
+            <div class="empty-state">
+              <div class="icon">⬛</div>
+              <p>No active sessions</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tunnels Tab -->
+        <section id="tab-tunnels" class="tab-panel">
+          <div class="section-header">
+            <h2>Remote Access Tunnels</h2>
+          </div>
+          <div class="card">
+            <div class="card-title">Cloudflare Tunnel</div>
+            <div class="card-subtitle" style="margin-bottom: 12px">
+              Expose your Warren host to the internet via Cloudflare's free tunnel service.
+            </div>
+            <button class="btn btn-primary">Set Up Cloudflare Tunnel</button>
+          </div>
+          <div class="card">
+            <div class="card-title">Tailscale</div>
+            <div class="card-subtitle" style="margin-bottom: 12px">
+              Join a Tailscale mesh network — Warren is auto-discovered on your tailnet.
+            </div>
+            <button class="btn btn-primary">Set Up Tailscale</button>
+          </div>
+          <p
+            style="
+              font-size: 11px;
+              color: var(--text-muted);
+              margin-top: 16px;
+              text-align: center;
+            "
+          >
+            Tunnel setup guides open in your browser. Warren does not relay your traffic.
+          </p>
+        </section>
+
+        <!-- Settings Tab -->
+        <section id="tab-settings" class="tab-panel">
+          <div class="section-header">
+            <h2>Settings</h2>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Default Shell</label>
+            <input
+              type="text"
+              class="form-input"
+              id="setting-shell"
+              placeholder="/bin/zsh"
+              onchange="saveSetting('shell', this.value)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Port</label>
+            <input
+              type="number"
+              class="form-input"
+              id="setting-port"
+              placeholder="9470"
+              onchange="saveSetting('port', parseInt(this.value))"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="toggle">
+              <input
+                type="checkbox"
+                id="setting-host-mode"
+                onchange="saveSetting('hostMode', this.checked)"
+              />
+              <span>Host Mode</span>
+            </label>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; margin-left: 46px">
+              Allow other Warren devices to connect to this machine
+            </p>
+          </div>
+
+          <div class="form-group">
+            <label class="toggle">
+              <input
+                type="checkbox"
+                id="setting-logging"
+                onchange="saveSetting('logging', this.checked)"
+              />
+              <span>Session Logging</span>
+            </label>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; margin-left: 46px">
+              Log terminal sessions to ~/.warren/logs/ (opt-in)
+            </p>
+          </div>
+
+          <div class="form-group" style="margin-top: 32px">
+            <div style="color: var(--text-muted); font-size: 11px">
+              Warren v0.1.0 · MIT License · <a
+                href="https://warren.sh"
+                style="color: var(--accent); text-decoration: none"
+                >warren.sh</a
+              >
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="api.js"></script>
+    <script>
+      // Tab navigation
+      document.querySelectorAll('.nav-item').forEach((item) => {
+        item.addEventListener('click', () => {
+          const tab = item.dataset.tab
+
+          document.querySelectorAll('.nav-item').forEach((n) => n.classList.remove('active'))
+          document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'))
+
+          item.classList.add('active')
+          document.getElementById(`tab-${tab}`).classList.add('active')
+
+          if (tab === 'sessions') refreshSessions()
+          if (tab === 'devices') refreshDevices()
+        })
+      })
+
+      // Initial load
+      refreshDevices()
+      loadSettings()
+
+      async function refreshDevices() {
+        const list = document.getElementById('devices-list')
+        try {
+          const data = await api.health()
+          // TODO: Load paired devices from config API once implemented
+          list.innerHTML = `
+            <div class="card">
+              <div class="card-row">
+                <div>
+                  <div class="card-title">
+                    <span class="status status-online"></span>This Mac
+                  </div>
+                  <div class="card-subtitle">Host · v${data.version} · ${data.sessions} active session(s)</div>
+                </div>
+              </div>
+            </div>
+          `
+        } catch (e) {
+          showError('Cannot connect to Warren server: ' + e.message)
+        }
+      }
+
+      async function refreshSessions() {
+        // TODO: Implement sessions API endpoint in core/server.ts
+        document.getElementById('sessions-list').innerHTML = `
+          <div class="empty-state">
+            <div class="icon">⬛</div>
+            <p>No active sessions</p>
+          </div>
+        `
+      }
+
+      function pairNewDevice() {
+        // TODO(v0.2): Trigger QR code display via IPC to main process
+        alert('QR pairing coming in v0.2')
+      }
+
+      function saveSetting(key, value) {
+        // TODO: Save via IPC to main process → config.ts
+        console.log('Setting:', key, '=', value)
+      }
+
+      async function loadSettings() {
+        try {
+          const data = await api.health()
+          // Populate from returned config
+        } catch {
+          // Server not available
+        }
+      }
+
+      function showError(msg) {
+        const banner = document.getElementById('error-banner')
+        banner.textContent = msg
+        banner.classList.add('show')
+      }
+    </script>
+  </body>
+</html>

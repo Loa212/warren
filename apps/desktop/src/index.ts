@@ -1,0 +1,89 @@
+// Requires Electrobun v1+ — run: npx electrobun init (tray-app template) then copy this code
+//
+// Warren Desktop — Electrobun main process
+//
+// Electrobun APIs verified against v1.15.1.
+// Docs: https://blackboard.sh/electrobun/docs/
+
+import { BrowserWindow, Tray } from 'electrobun'
+import { startServer, loadConfig, updateConfig, generateToken } from '@warren/core'
+
+// ---------------------------------------------------------------------------
+// Config & Server
+// ---------------------------------------------------------------------------
+
+const config = loadConfig()
+
+// v0.1: Static token auth. TODO(v0.2): Replace with X25519 key pair.
+const token = generateToken()
+
+const server = startServer({
+  port: config.port,
+  token,
+  staticDir: new URL('../../../web/dist', import.meta.url).pathname,
+  config,
+})
+
+console.log(`[warren] Server started on port ${config.port}`)
+console.log(`[warren] Token: ${token}`)
+
+// ---------------------------------------------------------------------------
+// Tray
+// ---------------------------------------------------------------------------
+
+let hostMode = config.hostMode
+
+// TrayOptions: { title?, image?, template?, width?, height? }
+// TODO: Create tray icon at src/assets/tray-icon.png (16x16 template image)
+const tray = new Tray({
+  image: 'src/assets/tray-icon.png',
+  template: true,
+  title: '',
+})
+
+// 'tray-clicked' is the Electrobun event for tray icon click
+tray.on('tray-clicked', () => toggleDashboard())
+
+// ---------------------------------------------------------------------------
+// Dashboard Window
+// ---------------------------------------------------------------------------
+
+let dashboardWindow: InstanceType<typeof BrowserWindow> | null = null
+
+function showDashboard(): void {
+  if (!dashboardWindow) {
+    // WindowOptionsType requires frame: { x, y, width, height }
+    dashboardWindow = new BrowserWindow({
+      title: 'Warren',
+      frame: { x: 100, y: 100, width: 900, height: 600 },
+      html: 'dashboard/index.html',
+      url: null,
+      preload: null,
+      renderer: 'native',
+      titleBarStyle: 'hiddenInset',
+      transparent: false,
+      navigationRules: null,
+      sandbox: false,
+    })
+  }
+}
+
+function toggleDashboard(): void {
+  if (dashboardWindow) {
+    // TODO: BrowserWindow.close() or hide() — check Electrobun docs for exact API
+    dashboardWindow = null
+  } else {
+    showDashboard()
+  }
+}
+
+// ---------------------------------------------------------------------------
+// App lifecycle
+// ---------------------------------------------------------------------------
+
+console.log('[warren] App ready. Click the tray icon to open the dashboard.')
+
+process.on('SIGTERM', () => {
+  server.stop()
+  process.exit(0)
+})

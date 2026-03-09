@@ -1,0 +1,84 @@
+---
+title: Welcome to Warren
+description: Your terminal is too powerful to be a black box. Warren is an open-source, peer-to-peer terminal mesh.
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components'
+
+```
+  (\(\
+ ( -.-)   Your terminal is too powerful to be a black box.
+ o_(")(")
+```
+
+**Warren** is an open-source, peer-to-peer terminal mesh. It lets you access your machines from any device — your phone, another Mac, a tablet — without SSH keys, config files, or cloud accounts.
+
+Install the Mac app. Open the PWA on your phone. Scan a QR. You're in.
+
+---
+
+## Why Warren?
+
+Terminal apps have full shell access to your machine. They can read your SSH keys, access your files, run any command as you. Most terminal-over-network apps ask you to trust a closed binary with this level of access.
+
+**Warren is different:**
+
+- **MIT licensed** — every line of code is auditable, every update is verifiable
+- **No cloud required** — connections are peer-to-peer, on your LAN by default
+- **Open pairing protocol** — X25519 ECDH key exchange, not a proprietary handshake
+- **No telemetry** — Warren does not phone home, ever
+
+Your terminal deserves nothing less.
+
+---
+
+## How It Works
+
+Warren creates a personal mesh. Every machine running Warren is a **node**. Any node can be:
+
+- A **host** — offers a shell (PTY) over an authenticated WebSocket
+- A **controller** — connects to hosts, runs xterm.js to render the terminal
+- **Both** — a Mac running Warren is both by default
+
+```
+     ┌─────────┐
+     │  Phone  │  (controller — PWA)
+     └──┬───┬──┘
+        │   │  independent, authenticated connections
+   ┌────▼┐ ┌▼────┐
+   │Mac A│ │Mac B│  (host + controller — Electrobun)
+   └─────┘ └──┬──┘
+               │
+          ┌────▼──┐
+          │ Mac C │  (host)
+          └───────┘
+```
+
+Every arrow is independent. Phone's access to Mac A does **not** grant access to Mac B.
+
+---
+
+## Quick Start
+
+<CardGrid>
+  <Card title="Install" icon="laptop">
+    Download the Warren Mac app and open it. It lives in your menu bar.
+  </Card>
+  <Card title="Scan" icon="phone">
+    Open `warren.sh` on your phone, or scan the QR code from the tray menu.
+  </Card>
+  <Card title="Connect" icon="right-arrow">
+    Your phone now has a full terminal session to your Mac. That's it.
+  </Card>
+</CardGrid>
+
+---
+
+## Explore the Docs
+
+<CardGrid>
+  <LinkCard title="Installation" href="/getting-started/installation/" description="Get Warren running on your Mac and phone." />
+  <LinkCard title="Security Model" href="/security/model/" description="Understand how Warren authenticates and protects your terminal." />
+  <LinkCard title="Theme Format" href="/reference/theme-format/" description="Create or import themes for your Warren terminal." />
+  <LinkCard title="WebSocket Protocol" href="/reference/ws-protocol/" description="The wire protocol powering every Warren connection." />
+</CardGrid>

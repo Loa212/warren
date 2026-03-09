@@ -1,0 +1,94 @@
+---
+title: Themes
+description: Customize Warren's terminal appearance with themes.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components'
+
+Warren uses a JSON-based theme format. Three themes are built in. You can create your own or import from the [Hyper theme ecosystem](https://hyper.is/themes).
+
+---
+
+## Built-in Themes
+
+| Name | Style |
+|------|-------|
+| `tokyo-night` | Dark blue-purple (default) |
+| `rabbit-hole` | Warren-branded deep purple |
+| `snow-warren` | Light, high-contrast |
+
+To switch themes:
+- **PWA:** Settings → Theme
+- **Desktop:** Dashboard → Settings → Theme
+- **CLI:** `warren theme set tokyo-night`
+
+---
+
+## Importing Hyper Themes
+
+Warren can import themes from the Hyper terminal ecosystem:
+
+```bash
+warren theme import hyper-snazzy
+warren theme import hyper-dracula
+warren theme import hyper-ayu
+```
+
+This downloads the npm package, extracts color values, and saves a native Warren theme to `~/.warren/themes/`.
+
+Browse Hyper themes at [hyper.is/themes](https://hyper.is/themes).
+
+---
+
+## Creating a Theme
+
+Themes are JSON files. See [Theme Format Reference](/reference/theme-format/) for the full schema.
+
+Quick start:
+
+```json
+{
+  "name": "My Theme",
+  "author": "you",
+  "version": "1.0.0",
+  "colors": {
+    "background": "#1e1e2e",
+    "foreground": "#cdd6f4",
+    "cursor": "#f5e0dc",
+    "cursorAccent": "#1e1e2e",
+    "selection": "#45475a",
+    "black": "#45475a",
+    "red": "#f38ba8",
+    "green": "#a6e3a1",
+    "yellow": "#f9e2af",
+    "blue": "#89b4fa",
+    "magenta": "#f5c2e7",
+    "cyan": "#89dceb",
+    "white": "#bac2de",
+    "brightBlack": "#585b70",
+    "brightRed": "#f38ba8",
+    "brightGreen": "#a6e3a1",
+    "brightYellow": "#f9e2af",
+    "brightBlue": "#89b4fa",
+    "brightMagenta": "#f5c2e7",
+    "brightCyan": "#89dceb",
+    "brightWhite": "#a6adc8"
+  }
+}
+```
+
+Save to `~/.warren/themes/my-theme.json`. It appears automatically in theme selectors.
+
+---
+
+## Sharing Themes
+
+Themes can be shared as:
+
+- **JSON files** — paste in a gist, add to a PR
+- **npm packages** — publish as `warren-theme-<name>` for community use
+- **Direct JSON** — copy/paste in the PWA theme editor (coming soon)
+
+<Aside type="tip">
+To contribute a theme to Warren's defaults, open a PR adding a JSON file to `packages/themes/src/defaults/`.
+</Aside>

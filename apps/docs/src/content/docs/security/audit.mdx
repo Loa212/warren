@@ -1,0 +1,55 @@
+---
+title: Security Audit
+description: Warren security audit log and findings.
+---
+
+import { Aside } from '@astrojs/starlight/components'
+
+<Aside type="note">
+Warren is pre-v1.0 software. No formal security audit has been conducted yet. This page will be updated as audits are completed.
+</Aside>
+
+## Planned Audits
+
+| Version | Scope | Status |
+|---------|-------|--------|
+| v0.2 | Pairing protocol, X25519 implementation | Planned |
+| v0.5 | Full protocol + PWA | Planned |
+| v1.0 | Full codebase audit | Planned |
+
+---
+
+## Known Limitations (v0.1)
+
+- **Static token auth** — the token is not cryptographically bound to a session nonce. Intercepted tokens can be reused until Warren restarts.
+- **No TLS on LAN** — WebSocket connections on the local network are unencrypted. Mitigated by using a TLS tunnel for remote access.
+- **No forward secrecy** — v0.1 auth provides no forward secrecy. v0.2's X25519 implementation will address this.
+- **No rate limiting** — repeated failed auth attempts are not rate-limited in v0.1.
+
+---
+
+## Self-Audit Checklist
+
+Items the Warren team reviews for each release:
+
+- [ ] No secrets in source code or git history
+- [ ] Dependencies audited with `bun audit`
+- [ ] All WebSocket message types validated before processing
+- [ ] Constant-time comparisons used for all token/secret checks
+- [ ] No eval() or dynamic code execution
+- [ ] No logging of sensitive data (tokens, session content)
+- [ ] Config file permissions set to 0600 (user read/write only)
+- [ ] Config directory permissions set to 0700
+
+---
+
+## Contributing Security Research
+
+Warren is open source and welcomes responsible disclosure. If you find a vulnerability:
+
+1. **Do not open a public GitHub issue**
+2. Use GitHub's Security Advisory system: Settings → Security → Advisories
+3. Include steps to reproduce, impact assessment, and suggested fix if known
+4. Allow 90 days for a fix before public disclosure
+
+We take terminal security seriously. Reports will be acknowledged within 48 hours.
