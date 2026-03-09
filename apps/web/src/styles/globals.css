@@ -1,0 +1,32 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-bg: #12111a;
+  --color-bg2: #1e1b2e;
+  --color-bg3: #2d2545;
+  --color-text: #d4c8f0;
+  --color-muted: #8b7fb8;
+  --color-accent: #b794f4;
+  --color-accent-dim: #6d5da8;
+  --color-border: #2d2545;
+  --color-green: #a8d8a8;
+  --color-red: #f28b82;
+}
+
+*,
+*::before,
+*::after {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  overscroll-behavior: none;
+}
+
+/* xterm needs explicit height */
+.xterm {
+  height: 100% !important;
+}
+.xterm-viewport {
+  overflow-y: hidden !important;
+}

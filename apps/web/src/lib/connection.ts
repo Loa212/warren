@@ -1,9 +1,9 @@
-// Connection manager — manages saved host connections
+// Connection manager — saved hosts in localStorage
 
 export interface SavedHost {
   id: string
   name: string
-  address: string // host:port
+  address: string
   token: string
   lastConnected?: number
 }
