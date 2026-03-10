@@ -36,7 +36,7 @@ export function advertise(info: WarrenServiceInfo): void {
 
   const bonjour = getBonjourInstance()
   publishedService = bonjour.publish({
-    name: `Warren - ${info.hostName}`,
+    name: `warren-${info.hostName}`,
     type: 'warren',
     port: info.port,
     txt: {

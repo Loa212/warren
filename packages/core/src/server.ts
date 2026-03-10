@@ -8,6 +8,7 @@
 //   GET /*                           — static file serving (for PWA in production)
 
 import { existsSync } from 'node:fs'
+import { hostname } from 'node:os'
 import { join } from 'node:path'
 import type { EncryptedPayload, WarrenConfig, WsMessage } from '@warren/types'
 import type { ServerWebSocket } from 'bun'
@@ -489,7 +490,7 @@ export function startServer(options: ServerOptions) {
     advertise({
       version: VERSION,
       nodeId: config.nodeId,
-      hostName: config.nodeId.slice(0, 8),
+      hostName: hostname(),
       hostMode: config.hostMode,
       port,
     })
