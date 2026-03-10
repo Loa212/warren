@@ -537,7 +537,7 @@
             return
           }
           list.innerHTML = sessions.map((s) => `
-            <div class="card">
+            <div class="card" id="session-${s.id}">
               <div class="card-row">
                 <div>
                   <div class="card-title">${s.shell.split('/').pop()} — ${s.cols}×${s.rows}</div>
@@ -546,6 +546,7 @@
                     Started ${new Date(s.startedAt).toLocaleTimeString()}
                   </div>
                 </div>
+                <button type="button" class="btn" style="background:transparent;color:var(--red);font-size:16px;padding:4px 8px;border:none" title="Kill session" onclick="killSession('${s.id}')">✕</button>
               </div>
             </div>
           `).join('')
@@ -646,6 +647,35 @@
         banner.style.borderColor = 'var(--red)'
         banner.style.color = 'var(--red)'
         banner.classList.add('show')
+      }
+
+      function killSession(id) {
+        const card = document.getElementById(`session-${id}`)
+        if (!card) return
+        card.innerHTML = `
+          <div class="card-row">
+            <div style="color:var(--red);font-size:12px">Kill this terminal session?</div>
+            <div style="display:flex;gap:8px;flex-shrink:0;margin-left:12px">
+              <button type="button" class="btn btn-ghost" onclick="refreshSessions()">Cancel</button>
+              <button type="button" class="btn btn-danger" onclick="confirmKillSession('${id}')">Kill</button>
+            </div>
+          </div>
+        `
+      }
+
+      async function confirmKillSession(id) {
+        try {
+          await api.killSession(id)
+          const card = document.getElementById(`session-${id}`)
+          if (card) card.remove()
+          const list = document.getElementById('sessions-list')
+          if (!list.querySelector('.card')) {
+            list.innerHTML = `<div class="empty-state"><div class="icon">⬛</div><p>No active sessions</p></div>`
+          }
+        } catch (e) {
+          showError(`Failed to kill session: ${e.message}`)
+          refreshSessions()
+        }
       }
 
       function deleteDevice(id, name) {

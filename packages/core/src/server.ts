@@ -357,6 +357,15 @@ export function startServer(options: ServerOptions) {
         })
       }
 
+      // Kill session endpoint
+      if (req.method === 'DELETE' && url.pathname.startsWith('/api/sessions/')) {
+        const id = url.pathname.slice('/api/sessions/'.length)
+        ptyManager.killSession(id)
+        return new Response(JSON.stringify({ ok: true }), {
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        })
+      }
+
       // Paired devices endpoint
       if (url.pathname === '/api/devices') {
         const { listPairedDevices } = await import('./devices')
