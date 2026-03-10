@@ -17,6 +17,8 @@
     "lint": "biome check ."
   },
   "dependencies": {
+    "@noble/curves": "^2.0.1",
+    "@noble/hashes": "^2.0.1",
     "@warren/types": "workspace:*",
     "qrcode-terminal": "^0.12.0"
   },
