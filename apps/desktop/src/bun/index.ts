@@ -3,6 +3,7 @@
 // Electrobun APIs verified against v1.15.1.
 // Docs: https://blackboard.sh/electrobun/docs/
 
+import { existsSync } from 'node:fs'
 import { generateToken, getOrCreateIdentity, loadConfig, startServer } from '@warren/core'
 import { BrowserWindow, Tray } from 'electrobun/bun'
 
@@ -16,10 +17,13 @@ const config = loadConfig()
 const identity = getOrCreateIdentity()
 const token = generateToken()
 
+// Only serve static files if the web dist exists (production build).
+// In dev mode (no build), omit staticDir so pair QR points to Vite at :3999.
+const webDistPath = new URL('../../../../web/dist', import.meta.url).pathname
 const server = startServer({
   port: config.port,
   token,
-  staticDir: new URL('../../../../web/dist', import.meta.url).pathname,
+  staticDir: existsSync(webDistPath) ? webDistPath : undefined,
   config,
 })
 
