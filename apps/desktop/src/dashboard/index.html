@@ -340,7 +340,7 @@
         <section id="tab-devices" class="tab-panel active">
           <div class="section-header">
             <h2>Devices</h2>
-            <button type="button" class="btn btn-primary" onclick="pairNewDevice()">+ Pair Device</button>
+            <button type="button" class="btn btn-primary" onclick="_pairNewDevice()">+ Pair Device</button>
           </div>
           <div id="devices-list">
             <div class="empty-state">
@@ -411,7 +411,7 @@
               class="form-input"
               id="setting-shell"
               placeholder="/bin/zsh"
-              onchange="saveSetting('shell', this.value)"
+              onchange="_saveSetting('shell', this.value)"
             />
           </div>
 
@@ -422,7 +422,7 @@
               class="form-input"
               id="setting-port"
               placeholder="9470"
-              onchange="saveSetting('port', parseInt(this.value))"
+              onchange="_saveSetting('port', parseInt(this.value))"
             />
           </div>
 
@@ -431,7 +431,7 @@
               <input
                 type="checkbox"
                 id="setting-host-mode"
-                onchange="saveSetting('hostMode', this.checked)"
+                onchange="_saveSetting('hostMode', this.checked)"
               />
               <span>Host Mode</span>
             </label>
@@ -445,7 +445,7 @@
               <input
                 type="checkbox"
                 id="setting-logging"
-                onchange="saveSetting('logging', this.checked)"
+                onchange="_saveSetting('logging', this.checked)"
               />
               <span>Session Logging</span>
             </label>

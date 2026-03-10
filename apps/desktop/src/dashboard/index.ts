@@ -27,7 +27,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json() as Promise<T>
 }
 
-export const api = {
+const api = {
   health(): Promise<HealthResponse> {
     return request<HealthResponse>('/health')
   },
