@@ -1,84 +1,238 @@
 // Warren WebSocket Server — powered by Bun.serve
 //
 // Serves:
-//   ws://HOST:PORT/ws?token=TOKEN  — WebSocket terminal endpoint
-//   GET /health                    — health check JSON
-//   GET /*                         — static file serving (for PWA in production)
-//
-// Auth v0.1: static token comparison.
-// TODO(v0.2): Replace with X25519 challenge-response (see auth.ts)
+//   ws://HOST:PORT/ws?token=TOKEN    — v0.1 token auth (backward compat)
+//   ws://HOST:PORT/ws?deviceId=ID    — v0.2 reconnection (HMAC challenge-response)
+//   ws://HOST:PORT/ws?pair=true      — v0.2 initial pairing (ECDH key exchange)
+//   GET /health                      — health check JSON
+//   GET /*                           — static file serving (for PWA in production)
 
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import type { WarrenConfig, WsMessage } from '@warren/types'
+import type { EncryptedPayload, WarrenConfig, WsMessage } from '@warren/types'
 import type { ServerWebSocket } from 'bun'
 import { validateToken } from './auth'
 import { loadConfig } from './config'
+import {
+  decrypt,
+  deriveSharedSecret,
+  encrypt,
+  type SharedSecret,
+  secretFromBase64,
+  verifyChallenge,
+} from './crypto'
+import {
+  addPairedDevice,
+  getOrCreateIdentity,
+  getPairedDevice,
+  updateDeviceLastSeen,
+} from './devices'
+import { validatePairingNonce } from './pairing'
 import * as ptyManager from './pty'
 
-const VERSION = '0.1.0'
+const VERSION = '0.2.0'
 const START_TIME = Date.now()
+
+// ---------------------------------------------------------------------------
+// Per-connection state
+// ---------------------------------------------------------------------------
+
+type AuthMode = 'token' | 'pair' | 'keypair'
 
 interface WsData {
   deviceId: string
   authenticated: boolean
-  token: string
+  authMode: AuthMode
+  token: string // v0.1 token (only for token mode)
+  nonce: string // challenge nonce
+  sharedSecret: SharedSecret | null // derived after pairing/reconnection
 }
+
+// ---------------------------------------------------------------------------
+// Server options
+// ---------------------------------------------------------------------------
 
 export interface ServerOptions {
   port?: number
-  token: string
+  token?: string // optional (v0.1 fallback)
   staticDir?: string
   config?: WarrenConfig
 }
 
-function send(ws: ServerWebSocket<WsData>, msg: WsMessage): void {
+// ---------------------------------------------------------------------------
+// Send helpers
+// ---------------------------------------------------------------------------
+
+function sendPlain(ws: ServerWebSocket<WsData>, msg: WsMessage): void {
   ws.send(JSON.stringify(msg))
 }
 
-function handleMessage(ws: ServerWebSocket<WsData>, raw: string): void {
-  let msg: WsMessage
+async function sendSecure(ws: ServerWebSocket<WsData>, msg: WsMessage): Promise<void> {
+  if (ws.data.sharedSecret) {
+    const payload = await encrypt(JSON.stringify(msg), ws.data.sharedSecret)
+    ws.send(JSON.stringify({ type: 'encrypted:message', payload }))
+  } else {
+    ws.send(JSON.stringify(msg))
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Message handling
+// ---------------------------------------------------------------------------
+
+async function unwrapMessage(ws: ServerWebSocket<WsData>, raw: string): Promise<WsMessage | null> {
   try {
-    msg = JSON.parse(raw) as WsMessage
-  } catch {
-    return
-  }
-
-  // Auth gate — all messages except auth:response require authenticated state
-  if (!ws.data.authenticated) {
-    if (msg.type === 'auth:response') {
-      if (validateToken(msg.signature, ws.data.token)) {
-        ws.data.authenticated = true
-        ws.data.deviceId = msg.deviceId
-        send(ws, { type: 'auth:success' })
-      } else {
-        send(ws, { type: 'auth:failure', reason: 'Invalid token' })
-        ws.close()
-      }
-    } else {
-      send(ws, { type: 'auth:failure', reason: 'Not authenticated' })
+    const parsed = JSON.parse(raw) as WsMessage
+    if (parsed.type === 'encrypted:message' && ws.data.sharedSecret) {
+      const inner = await decrypt(
+        (parsed as { payload: EncryptedPayload }).payload,
+        ws.data.sharedSecret,
+      )
+      return JSON.parse(inner) as WsMessage
     }
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+async function handlePairing(ws: ServerWebSocket<WsData>, msg: WsMessage): Promise<void> {
+  if (msg.type !== 'pair:request') {
+    sendPlain(ws, { type: 'pair:reject', reason: 'Expected pair:request' })
+    ws.close()
     return
   }
 
+  const { publicKey: peerPublicKey, nonceSig } = msg
+
+  // Verify the nonce was a valid active pairing session
+  if (!validatePairingNonce(nonceSig)) {
+    sendPlain(ws, { type: 'pair:reject', reason: 'Invalid or expired pairing nonce' })
+    ws.close()
+    return
+  }
+
+  // Derive shared secret via ECDH
+  const identity = getOrCreateIdentity()
+  const sharedSecret = deriveSharedSecret(identity.privateKey, peerPublicKey)
+
+  // Assign device ID
+  const deviceId = crypto.randomUUID()
+
+  // Store paired device
+  addPairedDevice({
+    id: deviceId,
+    name: `device-${deviceId.slice(0, 8)}`,
+    publicKey: peerPublicKey,
+    sharedSecret: btoa(String.fromCharCode(...sharedSecret.key)),
+    pairedAt: Date.now(),
+    lastSeen: Date.now(),
+    permission: 'full',
+  })
+
+  // Send accept with our public key
+  sendPlain(ws, {
+    type: 'pair:accept',
+    publicKey: identity.publicKey,
+    deviceId,
+  })
+
+  // Activate encryption for this connection
+  ws.data.sharedSecret = sharedSecret
+  ws.data.deviceId = deviceId
+  ws.data.authenticated = true
+}
+
+async function handleKeypairAuth(ws: ServerWebSocket<WsData>, msg: WsMessage): Promise<void> {
+  if (msg.type !== 'auth:response') {
+    sendPlain(ws, { type: 'auth:failure', reason: 'Expected auth:response' })
+    return
+  }
+
+  const device = getPairedDevice(msg.deviceId)
+  if (!device) {
+    sendPlain(ws, { type: 'auth:failure', reason: 'Unknown device' })
+    ws.close()
+    return
+  }
+
+  if (device.permission === 'revoked') {
+    sendPlain(ws, { type: 'auth:failure', reason: 'Device access revoked' })
+    ws.close()
+    return
+  }
+
+  // Reconstruct shared secret from stored base64
+  const sharedSecret = secretFromBase64(device.sharedSecret)
+
+  // Verify HMAC of nonce
+  const valid = await verifyChallenge(ws.data.nonce, msg.signature, sharedSecret)
+  if (!valid) {
+    sendPlain(ws, { type: 'auth:failure', reason: 'Invalid signature' })
+    ws.close()
+    return
+  }
+
+  // Auth success
+  ws.data.authenticated = true
+  ws.data.deviceId = msg.deviceId
+  ws.data.sharedSecret = sharedSecret
+  updateDeviceLastSeen(msg.deviceId)
+  sendPlain(ws, { type: 'auth:success' })
+}
+
+function handleTokenAuth(ws: ServerWebSocket<WsData>, msg: WsMessage): void {
+  if (msg.type !== 'auth:response') {
+    sendPlain(ws, { type: 'auth:failure', reason: 'Expected auth:response' })
+    return
+  }
+
+  if (validateToken(msg.signature, ws.data.token)) {
+    ws.data.authenticated = true
+    ws.data.deviceId = msg.deviceId
+    sendPlain(ws, { type: 'auth:success' })
+  } else {
+    sendPlain(ws, { type: 'auth:failure', reason: 'Invalid token' })
+    ws.close()
+  }
+}
+
+async function handleMessage(ws: ServerWebSocket<WsData>, raw: string): Promise<void> {
+  const msg = await unwrapMessage(ws, raw)
+  if (!msg) return
+
+  // Pre-auth gate
+  if (!ws.data.authenticated) {
+    switch (ws.data.authMode) {
+      case 'pair':
+        await handlePairing(ws, msg)
+        return
+      case 'keypair':
+        await handleKeypairAuth(ws, msg)
+        return
+      case 'token':
+        handleTokenAuth(ws, msg)
+        return
+    }
+  }
+
+  // Post-auth message routing
   switch (msg.type) {
     case 'ping':
-      send(ws, { type: 'pong' })
+      await sendSecure(ws, { type: 'pong' })
       break
 
     case 'session:create': {
       const session = ptyManager.createSession(msg.shell)
       session.deviceId = ws.data.deviceId
-      send(ws, { type: 'session:created', session })
+      await sendSecure(ws, { type: 'session:created', session })
 
-      // Stream PTY output → WebSocket
       ptyManager.onData(session.id, (data) => {
-        send(ws, { type: 'terminal:data', sessionId: session.id, data })
+        sendSecure(ws, { type: 'terminal:data', sessionId: session.id, data })
       })
 
-      // Clean up on session exit
       ptyManager.onExit(session.id, (_code) => {
-        send(ws, { type: 'session:ended', sessionId: session.id })
+        sendSecure(ws, { type: 'session:ended', sessionId: session.id })
       })
       break
     }
@@ -103,20 +257,24 @@ function handleMessage(ws: ServerWebSocket<WsData>, raw: string): void {
 
     case 'session:kill': {
       ptyManager.killSession(msg.sessionId)
-      send(ws, { type: 'session:ended', sessionId: msg.sessionId })
+      await sendSecure(ws, { type: 'session:ended', sessionId: msg.sessionId })
       break
     }
 
     default:
-      // Unknown message type — ignore
       break
   }
 }
+
+// ---------------------------------------------------------------------------
+// Server entry point
+// ---------------------------------------------------------------------------
 
 export function startServer(options: ServerOptions) {
   const config = options.config ?? loadConfig()
   const port = options.port ?? config.port ?? 9470
   const staticDir = options.staticDir ?? null
+  const serverToken = options.token ?? ''
 
   const server = Bun.serve<WsData>({
     port,
@@ -126,14 +284,26 @@ export function startServer(options: ServerOptions) {
 
       // WebSocket upgrade
       if (url.pathname === '/ws') {
-        const token = url.searchParams.get('token') ?? ''
-        const _nonce = crypto.randomUUID()
+        const token = url.searchParams.get('token')
+        const deviceId = url.searchParams.get('deviceId')
+        const pair = url.searchParams.get('pair')
+
+        // Determine auth mode from query parameters
+        let authMode: AuthMode = 'token'
+        if (pair === 'true') {
+          authMode = 'pair'
+        } else if (deviceId) {
+          authMode = 'keypair'
+        }
 
         const upgraded = server.upgrade(req, {
           data: {
-            deviceId: '',
+            deviceId: deviceId ?? '',
             authenticated: false,
-            token,
+            authMode,
+            token: token ?? serverToken,
+            nonce: '',
+            sharedSecret: null,
           },
         })
 
@@ -141,7 +311,6 @@ export function startServer(options: ServerOptions) {
           return new Response('WebSocket upgrade failed', { status: 400 })
         }
 
-        // The challenge will be sent in the `open` handler
         return undefined
       }
 
@@ -175,9 +344,15 @@ export function startServer(options: ServerOptions) {
 
     websocket: {
       open(ws) {
-        // Send auth challenge immediately on connect
+        if (ws.data.authMode === 'pair') {
+          // Pairing mode: no challenge needed, wait for pair:request
+          return
+        }
+
+        // Token and keypair modes: send auth challenge
         const nonce = crypto.randomUUID()
-        send(ws, { type: 'auth:challenge', nonce })
+        ws.data.nonce = nonce
+        sendPlain(ws, { type: 'auth:challenge', nonce })
       },
 
       message(ws, message) {
@@ -186,8 +361,10 @@ export function startServer(options: ServerOptions) {
 
       close(ws) {
         // Kill all sessions owned by this device
-        const sessions = ptyManager.listSessions().filter((s) => s.deviceId === ws.data.deviceId)
-        for (const session of sessions) {
+        const deviceSessions = ptyManager
+          .listSessions()
+          .filter((s) => s.deviceId === ws.data.deviceId)
+        for (const session of deviceSessions) {
           ptyManager.killSession(session.id)
         }
       },

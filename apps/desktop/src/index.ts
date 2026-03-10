@@ -5,7 +5,7 @@
 // Electrobun APIs verified against v1.15.1.
 // Docs: https://blackboard.sh/electrobun/docs/
 
-import { generateToken, loadConfig, startServer } from '@warren/core'
+import { generateToken, getOrCreateIdentity, loadConfig, startServer } from '@warren/core'
 import { BrowserWindow, Tray } from 'electrobun'
 
 // ---------------------------------------------------------------------------
@@ -14,7 +14,8 @@ import { BrowserWindow, Tray } from 'electrobun'
 
 const config = loadConfig()
 
-// v0.1: Static token auth. TODO(v0.2): Replace with X25519 key pair.
+// v0.2: X25519 keypair for ECDH pairing + fallback token for v0.1 clients
+const identity = getOrCreateIdentity()
 const token = generateToken()
 
 const server = startServer({
@@ -25,7 +26,8 @@ const server = startServer({
 })
 
 console.log(`[warren] Server started on port ${config.port}`)
-console.log(`[warren] Token: ${token}`)
+console.log(`[warren] Token: ${token} (v0.1 fallback)`)
+console.log(`[warren] Public key: ${identity.publicKey}`)
 
 // ---------------------------------------------------------------------------
 // Tray
