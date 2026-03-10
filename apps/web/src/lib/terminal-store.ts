@@ -26,14 +26,26 @@ const wsClients = new Map<string, WarrenWsClient>()
 let activeSessionId: string | null = null
 const listeners = new Set<Listener>()
 
+// Visible debug log — last few connection events, shown in UI when sessions are empty
+let debugLog: string[] = []
+function dbg(msg: string): void {
+  debugLog = [...debugLog.slice(-9), `${new Date().toLocaleTimeString()} ${msg}`]
+  emit()
+}
+
 // Cached snapshot — only updated on emit() to avoid useSyncExternalStore re-render loops
-let cachedSnapshot: { sessions: Map<string, SessionState>; activeSessionId: string | null } = {
+let cachedSnapshot: {
+  sessions: Map<string, SessionState>
+  activeSessionId: string | null
+  debugLog: string[]
+} = {
   sessions,
   activeSessionId,
+  debugLog,
 }
 
 function emit(): void {
-  cachedSnapshot = { sessions, activeSessionId }
+  cachedSnapshot = { sessions, activeSessionId, debugLog }
   for (const fn of listeners) fn()
 }
 
@@ -69,6 +81,7 @@ export function subscribe(listener: Listener): () => void {
 export function getSnapshot(): {
   sessions: Map<string, SessionState>
   activeSessionId: string | null
+  debugLog: string[]
 } {
   return cachedSnapshot
 }
@@ -83,12 +96,14 @@ export function hasSessionsForHost(host: string): boolean {
 }
 
 export function connectToHost(host: string, token: string, savedHost?: SavedHost): void {
-  if (wsClients.has(host)) return
+  const existing = wsClients.get(host)
+  if (existing?.isConnected) return // already live — nothing to do
+  if (existing) wsClients.delete(host) // stale disconnected client — evict and reconnect
 
   // Determine connection URL based on auth version
   let wsUrl: string
   if (savedHost?.authVersion === 'v2' && savedHost.sharedSecret) {
-    wsUrl = `ws://${host}/ws?deviceId=${encodeURIComponent(getDeviceId())}`
+    wsUrl = `ws://${host}/ws?deviceId=${encodeURIComponent(savedHost?.deviceId ?? getDeviceId())}`
   } else {
     wsUrl = `ws://${host}/ws?token=${encodeURIComponent(token)}`
   }
@@ -96,17 +111,16 @@ export function connectToHost(host: string, token: string, savedHost?: SavedHost
   const wsClient = new WarrenWsClient(wsUrl)
   wsClients.set(host, wsClient)
 
-  // If v0.2, set the shared secret on the client for encrypted transport
-  if (savedHost?.authVersion === 'v2' && savedHost.sharedSecret) {
-    wsClient.setSharedSecret(fromBase64(savedHost.sharedSecret))
-  }
+  // Note: sharedSecret is set AFTER auth:success, not here.
+  // Setting it before auth would cause auth:response to be encrypted,
+  // which the server cannot decrypt until after authentication completes.
 
   wsClient.onOpen(() => {
-    console.log(`[warren] connected to ${host}`)
+    dbg(`connected to ${host}`)
   })
 
   wsClient.onClose(() => {
-    console.log(`[warren] disconnected from ${host}`)
+    dbg(`disconnected from ${host}`)
     emit()
   })
 
@@ -118,9 +132,29 @@ export function connectToHost(host: string, token: string, savedHost?: SavedHost
 }
 
 export function createSession(): void {
-  if (!activeSessionId) return
-  const state = sessions.get(activeSessionId)
-  if (state) state.wsClient.send({ type: 'session:create' })
+  // Try to use the active session's wsClient first
+  if (activeSessionId) {
+    const state = sessions.get(activeSessionId)
+    if (state) {
+      state.wsClient.send({ type: 'session:create' })
+      return
+    }
+  }
+  // Fallback: use any connected client (handles the "all sessions killed" case)
+  for (const client of wsClients.values()) {
+    if (client.isConnected) {
+      client.send({ type: 'session:create' })
+      return
+    }
+  }
+}
+
+// Create a session specifically for a given host address
+export function createSessionForHost(address: string): void {
+  const client = wsClients.get(address)
+  if (client?.isConnected) {
+    client.send({ type: 'session:create' })
+  }
 }
 
 export function killSession(sessionId: string): void {
@@ -167,26 +201,42 @@ function handleMessage(
   switch (msg.type) {
     case 'auth:challenge':
       if (savedHost?.authVersion === 'v2' && savedHost.sharedSecret) {
-        // v0.2: Sign challenge nonce with HMAC using shared secret
-        const secretKey = fromBase64(savedHost.sharedSecret)
-        hmacSign(msg.nonce, { key: secretKey }).then((sig) => {
-          wsClient.send({ type: 'auth:response', signature: sig, deviceId: getDeviceId() })
-        })
+        // v0.2: Sign challenge nonce with HMAC (synchronous, no crypto.subtle)
+        dbg(`auth:challenge — signing with HMAC (deviceId=${savedHost.deviceId?.slice(0, 8)})`)
+        try {
+          const secretKey = fromBase64(savedHost.sharedSecret)
+          const sig = hmacSign(msg.nonce, { key: secretKey })
+          dbg('sending auth:response')
+          wsClient.send({
+            type: 'auth:response',
+            signature: sig,
+            deviceId: savedHost?.deviceId ?? getDeviceId(),
+          })
+        } catch (err) {
+          dbg(`hmacSign error: ${err}`)
+        }
       } else {
         // v0.1: Send token as signature
+        dbg('auth:challenge — sending token (v0.1)')
         wsClient.send({ type: 'auth:response', signature: token, deviceId: getDeviceId() })
       }
       break
 
     case 'auth:success':
+      dbg('auth:success — activating encryption, creating session')
+      // Activate encrypted transport now that the server has verified our identity
+      if (savedHost?.authVersion === 'v2' && savedHost.sharedSecret) {
+        wsClient.setSharedSecret(fromBase64(savedHost.sharedSecret))
+      }
       wsClient.send({ type: 'session:create' })
       break
 
     case 'auth:failure':
-      console.error('[warren] auth failed:', msg.reason)
+      dbg(`auth:failure — ${msg.reason}`)
       break
 
     case 'session:created':
+      dbg('session:created — opening terminal')
       addSession(msg.session, host, wsClient)
       break
 

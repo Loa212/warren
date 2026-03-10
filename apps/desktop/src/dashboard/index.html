@@ -45,7 +45,7 @@
         -webkit-app-region: drag;
         display: flex;
         align-items: center;
-        padding: 0 80px 0 20px;
+        padding: 0 20px 0 80px;
         border-bottom: 1px solid var(--border);
         flex-shrink: 0;
       }
@@ -340,7 +340,7 @@
         <section id="tab-devices" class="tab-panel active">
           <div class="section-header">
             <h2>Devices</h2>
-            <button type="button" class="btn btn-primary" onclick="pairNewDevice()">+ Pair Device</button>
+            <button type="button" class="btn btn-primary" onclick="_pairNewDevice()">+ Pair Device</button>
           </div>
           <div id="devices-list">
             <div class="empty-state">
@@ -411,7 +411,7 @@
               class="form-input"
               id="setting-shell"
               placeholder="/bin/zsh"
-              onchange="saveSetting('shell', this.value)"
+              onchange="_saveSetting('shell', this.value)"
             />
           </div>
 
@@ -422,7 +422,7 @@
               class="form-input"
               id="setting-port"
               placeholder="9470"
-              onchange="saveSetting('port', parseInt(this.value))"
+              onchange="_saveSetting('port', parseInt(this.value))"
             />
           </div>
 
@@ -431,7 +431,7 @@
               <input
                 type="checkbox"
                 id="setting-host-mode"
-                onchange="saveSetting('hostMode', this.checked)"
+                onchange="_saveSetting('hostMode', this.checked)"
               />
               <span>Host Mode</span>
             </label>
@@ -445,7 +445,7 @@
               <input
                 type="checkbox"
                 id="setting-logging"
-                onchange="saveSetting('logging', this.checked)"
+                onchange="_saveSetting('logging', this.checked)"
               />
               <span>Session Logging</span>
             </label>
@@ -467,7 +467,7 @@
       </main>
     </div>
 
-    <script src="api.js"></script>
+    <script src="index.js"></script>
     <script>
       // Tab navigation
       document.querySelectorAll('.nav-item').forEach((item) => {
@@ -492,8 +492,24 @@
       async function refreshDevices() {
         const list = document.getElementById('devices-list')
         try {
-          const data = await api.health()
-          // TODO: Load paired devices from config API once implemented
+          const [health, devices] = await Promise.all([api.health(), api.devices()])
+          const deviceCards = devices.map((d) => `
+            <div class="card" id="device-${d.id}">
+              <div class="card-row">
+                <div>
+                  <div class="card-title">
+                    <span class="status ${d.permission === 'full' ? 'status-online' : 'status-offline'}"></span>${d.name}
+                  </div>
+                  <div class="card-subtitle">
+                    Last seen ${new Date(d.lastSeen).toLocaleString()} ·
+                    ${d.permission === 'revoked' ? '<span style="color:var(--red)">revoked</span>' : 'full access'}
+                  </div>
+                </div>
+                <button type="button" class="btn" style="background:transparent;color:var(--red);font-size:16px;padding:4px 8px;border:none" title="Remove device" onclick="deleteDevice('${d.id}', '${d.name}')">🗑</button>
+              </div>
+            </div>
+          `).join('')
+
           list.innerHTML = `
             <div class="card">
               <div class="card-row">
@@ -501,10 +517,11 @@
                   <div class="card-title">
                     <span class="status status-online"></span>This Mac
                   </div>
-                  <div class="card-subtitle">Host · v${data.version} · ${data.sessions} active session(s)</div>
+                  <div class="card-subtitle">Host · v${health.version} · ${health.sessions} active session(s)</div>
                 </div>
               </div>
             </div>
+            ${deviceCards || '<div class="empty-state" style="margin-top:16px"><div class="icon">📱</div><p>No paired devices yet</p></div>'}
           `
         } catch (e) {
           showError(`Cannot connect to Warren server: ${e.message}`)
@@ -512,18 +529,102 @@
       }
 
       async function refreshSessions() {
-        // TODO: Implement sessions API endpoint in core/server.ts
-        document.getElementById('sessions-list').innerHTML = `
-          <div class="empty-state">
-            <div class="icon">⬛</div>
-            <p>No active sessions</p>
-          </div>
-        `
+        const list = document.getElementById('sessions-list')
+        try {
+          const sessions = await api.sessions()
+          if (sessions.length === 0) {
+            list.innerHTML = `<div class="empty-state"><div class="icon">⬛</div><p>No active sessions</p></div>`
+            return
+          }
+          list.innerHTML = sessions.map((s) => `
+            <div class="card" id="session-${s.id}">
+              <div class="card-row">
+                <div>
+                  <div class="card-title">${s.shell.split('/').pop()} — ${s.cols}×${s.rows}</div>
+                  <div class="card-subtitle">
+                    Device ${s.deviceId.slice(0, 8)} ·
+                    Started ${new Date(s.startedAt).toLocaleTimeString()}
+                  </div>
+                </div>
+                <button type="button" class="btn" style="background:transparent;color:var(--red);font-size:16px;padding:4px 8px;border:none" title="Kill session" onclick="killSession('${s.id}')">✕</button>
+              </div>
+            </div>
+          `).join('')
+        } catch {
+          list.innerHTML = `<div class="empty-state"><div class="icon">⬛</div><p>No active sessions</p></div>`
+        }
       }
 
-      function _pairNewDevice() {
-        // TODO(v0.2): Trigger QR code display via IPC to main process
-        alert('QR pairing coming in v0.2')
+      async function _pairNewDevice() {
+        const btn = document.querySelector('[onclick="_pairNewDevice()"]')
+        btn.disabled = true
+        btn.textContent = 'Generating…'
+        try {
+          const data = await api.startPairing()
+          showPairingCard(data)
+        } catch (e) {
+          showError(`Could not start pairing: ${e.message}`)
+        } finally {
+          btn.disabled = false
+          btn.textContent = '+ Pair Device'
+        }
+      }
+
+      function showPairingCard(data) {
+        const list = document.getElementById('devices-list')
+        const expiresIn = Math.floor((data.expiresAt - Date.now()) / 1000)
+        list.innerHTML = `
+          <div class="card" style="text-align:center">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <div class="card-title">Scan to pair</div>
+              <button type="button" class="btn btn-ghost" onclick="cancelPairing()">Cancel</button>
+            </div>
+            <div id="qr-container" style="display:inline-block;background:#12111a;padding:12px;border-radius:8px;margin-bottom:12px">
+              ${data.qrSvg}
+            </div>
+            <div style="margin-bottom:8px">
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em">PIN</div>
+              <div style="font-size:28px;font-weight:700;font-family:monospace;letter-spacing:.2em;color:var(--accent)">${data.pin}</div>
+            </div>
+            <div style="font-size:11px;color:var(--text-muted)">
+              Expires in <span id="pair-countdown">${expiresIn}</span>s
+            </div>
+          </div>
+        `
+
+        let knownDeviceCount = null
+
+        // Poll for new device + countdown
+        const interval = setInterval(async () => {
+          const el = document.getElementById('pair-countdown')
+          if (!el) { clearInterval(interval); return }
+
+          const remaining = Math.floor((data.expiresAt - Date.now()) / 1000)
+          if (remaining <= 0) {
+            clearInterval(interval)
+            refreshDevices()
+            return
+          }
+          el.textContent = remaining
+
+          // Detect new paired device
+          try {
+            const devices = await api.devices()
+            if (knownDeviceCount === null) {
+              knownDeviceCount = devices.length
+            } else if (devices.length > knownDeviceCount) {
+              clearInterval(interval)
+              showInfo(`Device paired successfully`)
+              refreshDevices()
+            }
+          } catch {
+            // server temporarily unreachable — keep polling
+          }
+        }, 2000)
+      }
+
+      function cancelPairing() {
+        refreshDevices()
       }
 
       function _saveSetting(key, value) {
@@ -543,7 +644,74 @@
       function showError(msg) {
         const banner = document.getElementById('error-banner')
         banner.textContent = msg
+        banner.style.borderColor = 'var(--red)'
+        banner.style.color = 'var(--red)'
         banner.classList.add('show')
+      }
+
+      function killSession(id) {
+        const card = document.getElementById(`session-${id}`)
+        if (!card) return
+        card.innerHTML = `
+          <div class="card-row">
+            <div style="color:var(--red);font-size:12px">Kill this terminal session?</div>
+            <div style="display:flex;gap:8px;flex-shrink:0;margin-left:12px">
+              <button type="button" class="btn btn-ghost" onclick="refreshSessions()">Cancel</button>
+              <button type="button" class="btn btn-danger" onclick="confirmKillSession('${id}')">Kill</button>
+            </div>
+          </div>
+        `
+      }
+
+      async function confirmKillSession(id) {
+        try {
+          await api.killSession(id)
+          const card = document.getElementById(`session-${id}`)
+          if (card) card.remove()
+          const list = document.getElementById('sessions-list')
+          if (!list.querySelector('.card')) {
+            list.innerHTML = `<div class="empty-state"><div class="icon">⬛</div><p>No active sessions</p></div>`
+          }
+        } catch (e) {
+          showError(`Failed to kill session: ${e.message}`)
+          refreshSessions()
+        }
+      }
+
+      function deleteDevice(id, name) {
+        const card = document.getElementById(`device-${id}`)
+        if (!card) return
+        // Replace card content with inline confirmation
+        card.innerHTML = `
+          <div class="card-row">
+            <div style="color:var(--red);font-size:12px">Remove <strong>${name}</strong>? This device will no longer be able to connect.</div>
+            <div style="display:flex;gap:8px;flex-shrink:0;margin-left:12px">
+              <button type="button" class="btn btn-ghost" onclick="refreshDevices()">Cancel</button>
+              <button type="button" class="btn btn-danger" onclick="confirmDeleteDevice('${id}', '${name}')">Remove</button>
+            </div>
+          </div>
+        `
+      }
+
+      async function confirmDeleteDevice(id, name) {
+        try {
+          await api.deleteDevice(id)
+          const card = document.getElementById(`device-${id}`)
+          if (card) card.remove()
+          showInfo(`Device "${name}" removed`)
+        } catch (e) {
+          showError(`Failed to remove device: ${e.message}`)
+          refreshDevices()
+        }
+      }
+
+      function showInfo(msg) {
+        const banner = document.getElementById('error-banner')
+        banner.textContent = msg
+        banner.style.borderColor = 'var(--accent)'
+        banner.style.color = 'var(--accent)'
+        banner.classList.add('show')
+        setTimeout(() => banner.classList.remove('show'), 4000)
       }
     </script>
   </body>

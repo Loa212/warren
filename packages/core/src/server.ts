@@ -27,7 +27,7 @@ import {
   getPairedDevice,
   updateDeviceLastSeen,
 } from './devices'
-import { validatePairingNonce } from './pairing'
+import { generateQrSvg, startPairing, validatePairingNonce } from './pairing'
 import * as ptyManager from './pty'
 
 const VERSION = '0.2.0'
@@ -145,16 +145,24 @@ async function handlePairing(ws: ServerWebSocket<WsData>, msg: WsMessage): Promi
 
 async function handleKeypairAuth(ws: ServerWebSocket<WsData>, msg: WsMessage): Promise<void> {
   if (msg.type !== 'auth:response') {
+    console.log(`[warren] handleKeypairAuth: unexpected msg type ${msg.type}`)
     sendPlain(ws, { type: 'auth:failure', reason: 'Expected auth:response' })
     return
   }
 
+  console.log(`[warren] handleKeypairAuth: deviceId=${msg.deviceId.slice(0, 8)}`)
+
   const device = getPairedDevice(msg.deviceId)
   if (!device) {
+    console.log('[warren] handleKeypairAuth: device not found')
     sendPlain(ws, { type: 'auth:failure', reason: 'Unknown device' })
     ws.close()
     return
   }
+
+  console.log(
+    `[warren] handleKeypairAuth: device found, sharedSecret length=${device.sharedSecret.length}`,
+  )
 
   if (device.permission === 'revoked') {
     sendPlain(ws, { type: 'auth:failure', reason: 'Device access revoked' })
@@ -166,7 +174,9 @@ async function handleKeypairAuth(ws: ServerWebSocket<WsData>, msg: WsMessage): P
   const sharedSecret = secretFromBase64(device.sharedSecret)
 
   // Verify HMAC of nonce
+  console.log(`[warren] handleKeypairAuth: verifying HMAC, nonce=${ws.data.nonce.slice(0, 8)}`)
   const valid = await verifyChallenge(ws.data.nonce, msg.signature, sharedSecret)
+  console.log(`[warren] handleKeypairAuth: HMAC valid=${valid}`)
   if (!valid) {
     sendPlain(ws, { type: 'auth:failure', reason: 'Invalid signature' })
     ws.close()
@@ -179,6 +189,7 @@ async function handleKeypairAuth(ws: ServerWebSocket<WsData>, msg: WsMessage): P
   ws.data.sharedSecret = sharedSecret
   updateDeviceLastSeen(msg.deviceId)
   sendPlain(ws, { type: 'auth:success' })
+  console.log('[warren] handleKeypairAuth: auth:success sent')
 }
 
 function handleTokenAuth(ws: ServerWebSocket<WsData>, msg: WsMessage): void {
@@ -279,8 +290,19 @@ export function startServer(options: ServerOptions) {
   const server = Bun.serve<WsData>({
     port,
 
-    fetch(req, server) {
+    async fetch(req, server) {
       const url = new URL(req.url)
+
+      // CORS preflight — needed for WebKit webviews fetching from views:// origin
+      if (req.method === 'OPTIONS') {
+        return new Response(null, {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+          },
+        })
+      }
 
       // WebSocket upgrade
       if (url.pathname === '/ws') {
@@ -314,6 +336,66 @@ export function startServer(options: ServerOptions) {
         return undefined
       }
 
+      // Pair start endpoint — generates a QR code + PIN for the pairing flow
+      if (url.pathname === '/api/pair/start') {
+        const identity = getOrCreateIdentity()
+        const session = await startPairing(port, identity.publicKey)
+        // Use server port if staticDir present (production), else 3999 (dev with separate Vite)
+        const webPort = staticDir ? port : 3999
+        const hostIp = session.qrPayload.host.split(':')[0]
+        const pairUrl = `http://${hostIp}:${webPort}/pair?host=${encodeURIComponent(session.qrPayload.host)}&nonce=${encodeURIComponent(session.qrPayload.nonce)}&publicKey=${encodeURIComponent(session.qrPayload.publicKey)}&pin=${encodeURIComponent(session.pin)}&version=0.2`
+        const qrSvg = await generateQrSvg(pairUrl)
+        return new Response(
+          JSON.stringify({ pin: session.pin, expiresAt: session.expiresAt, pairUrl, qrSvg }),
+          { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } },
+        )
+      }
+
+      // Sessions list endpoint
+      if (url.pathname === '/api/sessions') {
+        const sessions = ptyManager.listSessions()
+        return new Response(JSON.stringify(sessions), {
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        })
+      }
+
+      // Kill session endpoint
+      if (req.method === 'DELETE' && url.pathname.startsWith('/api/sessions/')) {
+        const id = url.pathname.slice('/api/sessions/'.length)
+        ptyManager.killSession(id)
+        return new Response(JSON.stringify({ ok: true }), {
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        })
+      }
+
+      // Paired devices endpoint
+      if (url.pathname === '/api/devices') {
+        const { listPairedDevices } = await import('./devices')
+        const devices = listPairedDevices().map((d) => ({
+          id: d.id,
+          name: d.name,
+          pairedAt: d.pairedAt,
+          lastSeen: d.lastSeen,
+          permission: d.permission,
+        }))
+        return new Response(JSON.stringify(devices), {
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        })
+      }
+
+      // Delete paired device — also kill all active sessions for that device
+      if (req.method === 'DELETE' && url.pathname.startsWith('/api/devices/')) {
+        const id = url.pathname.slice('/api/devices/'.length)
+        const { removePairedDevice } = await import('./devices')
+        removePairedDevice(id)
+        for (const s of ptyManager.listSessions().filter((s) => s.deviceId === id)) {
+          ptyManager.killSession(s.id)
+        }
+        return new Response(JSON.stringify({ ok: true }), {
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        })
+      }
+
       // Health endpoint
       if (url.pathname === '/health') {
         const body = JSON.stringify({
@@ -324,7 +406,10 @@ export function startServer(options: ServerOptions) {
           sessions: ptyManager.listSessions().length,
         })
         return new Response(body, {
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
         })
       }
 
@@ -356,7 +441,9 @@ export function startServer(options: ServerOptions) {
       },
 
       message(ws, message) {
-        handleMessage(ws, message.toString())
+        handleMessage(ws, message.toString()).catch((err) => {
+          console.error('[warren] Unhandled error in message handler:', err)
+        })
       },
 
       close(ws) {

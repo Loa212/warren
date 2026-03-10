@@ -1,14 +1,19 @@
 // Typed WebSocket client using WsMessage protocol
 //
-// v0.2: Supports encrypted transport via AES-256-GCM when a shared secret is set.
+// v0.2: Encrypted transport via AES-256-GCM using @noble/ciphers (pure JS).
+// Uses @noble/hashes for HMAC. Neither requires a secure context (HTTPS),
+// so the PWA works over plain HTTP on a local network.
 
+import { gcm } from '@noble/ciphers/aes.js'
+import { hmac } from '@noble/hashes/hmac.js'
+import { sha256 } from '@noble/hashes/sha2.js'
 import type { EncryptedPayload, WsMessage } from '@warren/types'
 
 type MessageHandler = (msg: WsMessage) => void
 type ConnectionHandler = () => void
 
 // ---------------------------------------------------------------------------
-// Crypto helpers (browser-compatible, no @noble/curves dependency needed)
+// Helpers
 // ---------------------------------------------------------------------------
 
 function toBase64(bytes: Uint8Array): string {
@@ -32,56 +37,26 @@ interface SharedSecretRef {
   key: Uint8Array
 }
 
-async function encryptPayload(data: string, secret: SharedSecretRef): Promise<EncryptedPayload> {
+// HMAC-SHA256 using @noble/hashes — synchronous, no crypto.subtle required
+export function hmacSign(nonce: string, secret: SharedSecretRef): string {
+  const data = new TextEncoder().encode(nonce)
+  const sig = hmac(sha256, secret.key, data)
+  return toBase64(sig)
+}
+
+// AES-256-GCM using @noble/ciphers — synchronous, no crypto.subtle required
+function encryptPayload(data: string, secret: SharedSecretRef): EncryptedPayload {
   const iv = crypto.getRandomValues(new Uint8Array(12))
   const encoded = new TextEncoder().encode(data)
-  const key = await crypto.subtle.importKey(
-    'raw',
-    secret.key as BufferSource,
-    { name: 'AES-GCM' },
-    false,
-    ['encrypt'],
-  )
-  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoded)
-  return {
-    ciphertext: toBase64(new Uint8Array(ciphertext)),
-    iv: toBase64(iv),
-    algorithm: 'AES-GCM',
-  }
+  const encrypted = gcm(secret.key, iv).encrypt(encoded)
+  return { ciphertext: toBase64(encrypted), iv: toBase64(iv), algorithm: 'AES-GCM' }
 }
 
-async function decryptPayload(
-  encrypted: EncryptedPayload,
-  secret: SharedSecretRef,
-): Promise<string> {
+function decryptPayload(encrypted: EncryptedPayload, secret: SharedSecretRef): string {
   const iv = fromBase64(encrypted.iv)
   const ciphertext = fromBase64(encrypted.ciphertext)
-  const key = await crypto.subtle.importKey(
-    'raw',
-    secret.key as BufferSource,
-    { name: 'AES-GCM' },
-    false,
-    ['decrypt'],
-  )
-  const plaintext = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: iv as BufferSource },
-    key,
-    ciphertext as BufferSource,
-  )
-  return new TextDecoder().decode(plaintext)
-}
-
-export async function hmacSign(nonce: string, secret: SharedSecretRef): Promise<string> {
-  const key = await crypto.subtle.importKey(
-    'raw',
-    secret.key as BufferSource,
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  )
-  const data = new TextEncoder().encode(nonce)
-  const signature = await crypto.subtle.sign('HMAC', key, data)
-  return toBase64(new Uint8Array(signature))
+  const decrypted = gcm(secret.key, iv).decrypt(ciphertext)
+  return new TextDecoder().decode(decrypted)
 }
 
 // ---------------------------------------------------------------------------
@@ -125,10 +100,8 @@ export class WarrenWsClient {
     if (this.ws?.readyState !== WebSocket.OPEN) return
 
     if (this.sharedSecret) {
-      // Encrypt and send asynchronously
-      encryptPayload(JSON.stringify(msg), this.sharedSecret).then((payload) => {
-        this.ws?.send(JSON.stringify({ type: 'encrypted:message', payload }))
-      })
+      const payload = encryptPayload(JSON.stringify(msg), this.sharedSecret)
+      this.ws.send(JSON.stringify({ type: 'encrypted:message', payload }))
     } else {
       this.ws.send(JSON.stringify(msg))
     }
@@ -161,12 +134,11 @@ export class WarrenWsClient {
         for (const handler of this.openHandlers) handler()
       }
 
-      this.ws.onmessage = async (event: MessageEvent<string>) => {
+      this.ws.onmessage = (event: MessageEvent<string>) => {
         try {
           let msg = JSON.parse(event.data) as WsMessage
-          // Decrypt encrypted envelope if we have a shared secret
           if (msg.type === 'encrypted:message' && this.sharedSecret) {
-            const inner = await decryptPayload(
+            const inner = decryptPayload(
               (msg as { type: string; payload: EncryptedPayload }).payload,
               this.sharedSecret,
             )

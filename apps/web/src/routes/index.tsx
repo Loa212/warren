@@ -26,7 +26,7 @@ function HostsPage() {
   function handleConnect(host: SavedHost) {
     updateHostLastConnected(host.id)
     if (!hasSessionsForHost(host.address)) {
-      connectToHost(host.address, host.token)
+      connectToHost(host.address, host.token, host)
     }
     navigate({ to: '/$hostId/terminal', params: { hostId: host.id } })
   }
@@ -37,7 +37,7 @@ function HostsPage() {
     setAddress('')
     setToken('')
     setOpen(false)
-    connectToHost(host.address, host.token)
+    connectToHost(host.address, host.token, host)
     navigate({ to: '/$hostId/terminal', params: { hostId: host.id } })
   }
 

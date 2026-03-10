@@ -12,7 +12,7 @@
   "dependencies": {
     "@warren/core": "workspace:*",
     "@warren/types": "workspace:*",
-    "electrobun": "latest"
+    "electrobun": "^1.15.1"
   },
   "devDependencies": {
     "@warren/config": "workspace:*",

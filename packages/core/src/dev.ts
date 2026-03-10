@@ -19,7 +19,7 @@ function getLocalIp(): string {
 const config = loadConfig()
 const token = crypto.randomUUID()
 const ip = getLocalIp()
-const webPort = 3000
+const webPort = 3999
 const connectUrl = `http://${ip}:${webPort}/connect?host=${encodeURIComponent(`${ip}:${config.port}`)}&token=${encodeURIComponent(token)}`
 
 console.log('\n  Warren dev server')

@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useState, useSyncExternalStore } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { DraggableFab } from '@/components/draggable-fab'
 import { TerminalPane } from '@/components/terminal-pane'
 import { Toolbar } from '@/components/toolbar'
+import { getHosts } from '@/lib/connection'
 import {
   activateSession,
   createSession,
+  createSessionForHost,
   getSnapshot,
   killSession,
   sendData,
@@ -17,9 +19,20 @@ export const Route = createFileRoute('/$hostId/terminal')({
 })
 
 function TerminalPage() {
-  const { sessions, activeSessionId } = useSyncExternalStore(subscribe, getSnapshot)
+  const { hostId } = Route.useParams()
+  const { sessions, activeSessionId, debugLog } = useSyncExternalStore(subscribe, getSnapshot)
   const sessionList = [...sessions.entries()]
   const [menuOpen, setMenuOpen] = useState(false)
+
+  // On mount only: if no sessions exist yet, create one automatically.
+  // Intentionally omits sessionList.length — re-triggering on kill would fight the user.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only intent
+  useEffect(() => {
+    if (sessionList.length === 0) {
+      const address = getHosts().find((h) => h.id === hostId)?.address
+      if (address) createSessionForHost(address)
+    }
+  }, [hostId])
 
   return (
     <div className="fixed inset-0 flex flex-col bg-black">
@@ -72,8 +85,18 @@ function TerminalPage() {
       {/* Terminal panes */}
       <div className="relative flex-1 overflow-hidden">
         {sessionList.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-sm gap-3">
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-sm gap-3 px-6">
             <span>No active sessions</span>
+            {debugLog.length > 0 && (
+              <div className="w-full max-w-sm bg-black/40 rounded-lg p-3 font-mono text-[10px] text-muted-foreground space-y-0.5">
+                {debugLog.map((line, i) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: debug log is ephemeral
+                  <div key={i} className={line.includes('failure') ? 'text-destructive' : ''}>
+                    {line}
+                  </div>
+                ))}
+              </div>
+            )}
             <Link to="/" className="text-primary underline">
               Back to hosts
             </Link>

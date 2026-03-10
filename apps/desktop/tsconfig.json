@@ -6,6 +6,7 @@
     "skipLibCheck": true,
     "paths": {
       "electrobun": ["./types/electrobun.d.ts"],
+      "electrobun/bun": ["./types/electrobun.d.ts"],
       "@warren/types": ["../../packages/types/src/index.ts"],
       "@warren/core": ["../../packages/core/src/index.ts"],
       "@warren/themes": ["../../packages/themes/src/index.ts"]

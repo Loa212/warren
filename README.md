@@ -93,15 +93,13 @@ See [SPEC.md](./SPEC.md) for the full architecture, security model, and roadmap.
 # Prerequisites: Bun 1.1+
 bun install
 
-# Run the core WebSocket server (PTY host)
-# Prints a token + QR code — scan from your phone or paste into the PWA
-cd packages/core && bun run src/dev.ts
+# Full dev — Electrobun desktop app + PWA + docs
+# Desktop starts the Warren server on :9470; PWA at localhost:3999
+bun run dev
 
-# Run the PWA dev server (separate terminal)
-bun run dev --filter=@warren/web
-
-# Run the docs dev server
-bun run dev --filter=@warren/docs
+# Web-only dev — no Electrobun required
+# Starts the core server (prints QR + token) + PWA
+bun run dev:web
 
 # Build everything
 bun run build
@@ -109,15 +107,6 @@ bun run build
 # Lint + typecheck
 bun run lint
 bun run typecheck
-```
-
-### Project Setup (first time)
-
-```bash
-# Desktop app requires Electrobun init
-cd apps/desktop
-npx electrobun init   # follow prompts, choose tray-app template
-bun install
 ```
 
 ---
