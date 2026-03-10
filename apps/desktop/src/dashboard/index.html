@@ -492,8 +492,23 @@
       async function refreshDevices() {
         const list = document.getElementById('devices-list')
         try {
-          const data = await api.health()
-          // TODO: Load paired devices from config API once implemented
+          const [health, devices] = await Promise.all([api.health(), api.devices()])
+          const deviceCards = devices.map((d) => `
+            <div class="card">
+              <div class="card-row">
+                <div>
+                  <div class="card-title">
+                    <span class="status ${d.permission === 'full' ? 'status-online' : 'status-offline'}"></span>${d.name}
+                  </div>
+                  <div class="card-subtitle">
+                    Last seen ${new Date(d.lastSeen).toLocaleString()} ·
+                    ${d.permission === 'revoked' ? '<span style="color:var(--red)">revoked</span>' : 'full access'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          `).join('')
+
           list.innerHTML = `
             <div class="card">
               <div class="card-row">
@@ -501,10 +516,11 @@
                   <div class="card-title">
                     <span class="status status-online"></span>This Mac
                   </div>
-                  <div class="card-subtitle">Host · v${data.version} · ${data.sessions} active session(s)</div>
+                  <div class="card-subtitle">Host · v${health.version} · ${health.sessions} active session(s)</div>
                 </div>
               </div>
             </div>
+            ${deviceCards || '<div class="empty-state" style="margin-top:16px"><div class="icon">📱</div><p>No paired devices yet</p></div>'}
           `
         } catch (e) {
           showError(`Cannot connect to Warren server: ${e.message}`)
@@ -512,13 +528,29 @@
       }
 
       async function refreshSessions() {
-        // TODO: Implement sessions API endpoint in core/server.ts
-        document.getElementById('sessions-list').innerHTML = `
-          <div class="empty-state">
-            <div class="icon">⬛</div>
-            <p>No active sessions</p>
-          </div>
-        `
+        const list = document.getElementById('sessions-list')
+        try {
+          const sessions = await api.sessions()
+          if (sessions.length === 0) {
+            list.innerHTML = `<div class="empty-state"><div class="icon">⬛</div><p>No active sessions</p></div>`
+            return
+          }
+          list.innerHTML = sessions.map((s) => `
+            <div class="card">
+              <div class="card-row">
+                <div>
+                  <div class="card-title">${s.shell.split('/').pop()} — ${s.cols}×${s.rows}</div>
+                  <div class="card-subtitle">
+                    Device ${s.deviceId.slice(0, 8)} ·
+                    Started ${new Date(s.startedAt).toLocaleTimeString()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          `).join('')
+        } catch {
+          list.innerHTML = `<div class="empty-state"><div class="icon">⬛</div><p>No active sessions</p></div>`
+        }
       }
 
       async function _pairNewDevice() {

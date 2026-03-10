@@ -11,6 +11,7 @@ export const Route = createFileRoute('/pair')({
     host: (search.host as string) ?? '',
     nonce: (search.nonce as string) ?? '',
     publicKey: (search.publicKey as string) ?? '',
+    pin: (search.pin as string) ?? '',
   }),
   beforeLoad: ({ search }) => {
     if (!search.host || !search.nonce || !search.publicKey) {
@@ -23,7 +24,7 @@ export const Route = createFileRoute('/pair')({
 type PairStatus = 'connecting' | 'success' | 'error'
 
 function PairPage() {
-  const { host, nonce } = Route.useSearch()
+  const { host, nonce, pin } = Route.useSearch()
   const navigate = useNavigate()
   const [status, setStatus] = useState<PairStatus>('connecting')
   const [errorMsg, setErrorMsg] = useState('')
@@ -95,7 +96,14 @@ function PairPage() {
         <>
           <div className="text-4xl mb-6 animate-pulse">🐇</div>
           <h1 className="text-lg font-semibold text-foreground mb-2">Pairing…</h1>
-          <p className="text-sm text-muted-foreground">Exchanging keys with {host}</p>
+          <p className="text-sm text-muted-foreground mb-4">Exchanging keys with {host}</p>
+          {pin && (
+            <div className="bg-secondary rounded-xl px-6 py-4 text-center">
+              <p className="text-xs text-muted-foreground mb-1 uppercase tracking-widest">PIN</p>
+              <p className="text-3xl font-mono font-bold text-primary tracking-widest">{pin}</p>
+              <p className="text-xs text-muted-foreground mt-1">Verify this matches your desktop</p>
+            </div>
+          )}
         </>
       )}
       {status === 'success' && (

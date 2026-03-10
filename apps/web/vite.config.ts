@@ -28,6 +28,7 @@ export default defineConfig({
   },
   server: {
     port: 3999,
+    strictPort: true, // fail fast instead of silently bumping to 4000+
     host: true,
     watch: {
       ignored: ['**/route-tree.gen.ts'],

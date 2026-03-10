@@ -34,6 +34,23 @@ export interface PairStartResponse {
   qrSvg: string
 }
 
+export interface SessionInfo {
+  id: string
+  deviceId: string
+  shell: string
+  startedAt: number
+  cols: number
+  rows: number
+}
+
+export interface DeviceInfo {
+  id: string
+  name: string
+  pairedAt: number
+  lastSeen: number
+  permission: 'full' | 'revoked'
+}
+
 const api = {
   health(): Promise<HealthResponse> {
     return request<HealthResponse>('/health')
@@ -43,11 +60,13 @@ const api = {
     return request<PairStartResponse>('/api/pair/start')
   },
 
-  // TODO: Add more endpoints as the server exposes them:
-  //   sessions(): Promise<TerminalSession[]>
-  //   devices(): Promise<PairedDevice[]>
-  //   revokeDevice(id: string): Promise<void>
-  //   killSession(id: string): Promise<void>
+  sessions(): Promise<SessionInfo[]> {
+    return request<SessionInfo[]>('/api/sessions')
+  },
+
+  devices(): Promise<DeviceInfo[]> {
+    return request<DeviceInfo[]>('/api/devices')
+  },
 }
 
 // Make available as a global for the inline script in index.html
