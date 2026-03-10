@@ -383,11 +383,14 @@ export function startServer(options: ServerOptions) {
         })
       }
 
-      // Delete paired device
+      // Delete paired device — also kill all active sessions for that device
       if (req.method === 'DELETE' && url.pathname.startsWith('/api/devices/')) {
         const id = url.pathname.slice('/api/devices/'.length)
         const { removePairedDevice } = await import('./devices')
         removePairedDevice(id)
+        for (const s of ptyManager.listSessions().filter((s) => s.deviceId === id)) {
+          ptyManager.killSession(s.id)
+        }
         return new Response(JSON.stringify({ ok: true }), {
           headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
         })

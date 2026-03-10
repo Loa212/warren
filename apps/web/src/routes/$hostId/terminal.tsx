@@ -24,14 +24,15 @@ function TerminalPage() {
   const sessionList = [...sessions.entries()]
   const [menuOpen, setMenuOpen] = useState(false)
 
-  // When there are no sessions but a WS is connected, create one automatically.
-  // This covers: navigating back after killing all sessions, or returning after a reconnect.
+  // On mount only: if no sessions exist yet, create one automatically.
+  // Intentionally omits sessionList.length — re-triggering on kill would fight the user.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only intent
   useEffect(() => {
     if (sessionList.length === 0) {
       const address = getHosts().find((h) => h.id === hostId)?.address
       if (address) createSessionForHost(address)
     }
-  }, [hostId, sessionList.length])
+  }, [hostId])
 
   return (
     <div className="fixed inset-0 flex flex-col bg-black">
