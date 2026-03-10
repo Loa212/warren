@@ -1,9 +1,13 @@
-# Warren
+# 🐇 Warren
 
 ```
-  (\(\
- ( -.-)   Your terminal is too powerful to be a black box.
- o_(")(")
+        \\
+         \\
+          \\
+           \ (\(\
+            ( -.-)
+        o_(")(")>    Your terminal is too powerful to be a black box.
+       🌿~~~~~~~~~~~
 ```
 
 **Warren** is an open-source, peer-to-peer terminal mesh that lets you access your machines from any device — phone, laptop, or another Mac. No SSH keys. No config files. No cloud accounts. Install, scan, connect.
@@ -128,9 +132,11 @@ See [Security Model](./apps/docs/src/content/docs/security/model.mdx) for detail
 
 ---
 
-## Contributing
+## 🐰 Contributing
 
-Warren is early-stage and welcomes contributors. Priority areas:
+Warren is early-stage and welcomes contributors! See [CONTRIBUTING.md](./CONTRIBUTING.md) for branding guidelines, emoji palette, code style, and setup instructions.
+
+Priority areas:
 
 1. **Bonjour/mDNS discovery** (`packages/core/src/discovery.ts`)
 2. **X25519 key exchange + encrypted transport** (`packages/core/src/auth.ts`)
@@ -138,14 +144,6 @@ Warren is early-stage and welcomes contributors. Priority areas:
 4. **Themes** — submit themes as PRs to `packages/themes/src/defaults/`
 
 Please read the spec before contributing so you understand the design intent.
-
-```bash
-# Run tests
-bun test
-
-# Format
-bun run format
-```
 
 ---
 
@@ -167,4 +165,4 @@ bun run format
 
 MIT — see [LICENSE](./LICENSE).
 
-_Warren — a network of tunnels, built in the open._
+_Warren — a network of tunnels, built in the open._ 🐇

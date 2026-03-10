@@ -1,5 +1,32 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Branding
+
+- Project emoji: 🐇 (rabbit) — use in PR titles, release notes, CLI output
+- Secondary emoji: 🐰 🥕 🕳️ 🌿
+- Tone: cozy, technical, open-source friendly, never corporate
+- Mascot: a chill rabbit. Nature vibes. Flowers optional but encouraged.
+- Colors: purple `#b794f4` primary, dark `#12111a` background, coral `#f28b82` accent
+
+## Commit Style
+
+- Conventional commits: `feat:`, `fix:`, `docs:`, `chore:`
+- Prefix with 🐇 for releases/milestones
+
+## Code Style
+
+- Biome for formatting and linting
+- Single quotes, no semicolons
+- Bun for all runtime/tooling
+
+## Architecture
+
+- See `spec.md` for full architecture
+- `packages/core` is the shared runtime
+- `apps/web` is React + Vite + TanStack Router PWA
+- `apps/desktop` is Electrobun tray app
+- `apps/docs` is Astro Starlight
+
 ## General Guidelines
 
 - Use bun for all package management, all scripts and commands.
