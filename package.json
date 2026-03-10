@@ -8,7 +8,8 @@
   ],
   "scripts": {
     "build": "turbo build",
-    "dev": "turbo dev",
+    "dev": "turbo dev --filter=@warren/desktop --filter=@warren/web --filter=@warren/docs",
+    "dev:web": "turbo dev --filter=@warren/core --filter=@warren/web",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "format": "biome format --write .",
