@@ -494,7 +494,7 @@
         try {
           const [health, devices] = await Promise.all([api.health(), api.devices()])
           const deviceCards = devices.map((d) => `
-            <div class="card">
+            <div class="card" id="device-${d.id}">
               <div class="card-row">
                 <div>
                   <div class="card-title">
@@ -505,6 +505,7 @@
                     ${d.permission === 'revoked' ? '<span style="color:var(--red)">revoked</span>' : 'full access'}
                   </div>
                 </div>
+                <button type="button" class="btn" style="background:transparent;color:var(--red);font-size:16px;padding:4px 8px;border:none" title="Remove device" onclick="deleteDevice('${d.id}', '${d.name}')">🗑</button>
               </div>
             </div>
           `).join('')
@@ -589,18 +590,36 @@
             </div>
           </div>
         `
-        // Start countdown
-        const interval = setInterval(() => {
+
+        let knownDeviceCount = null
+
+        // Poll for new device + countdown
+        const interval = setInterval(async () => {
           const el = document.getElementById('pair-countdown')
           if (!el) { clearInterval(interval); return }
+
           const remaining = Math.floor((data.expiresAt - Date.now()) / 1000)
           if (remaining <= 0) {
             clearInterval(interval)
             refreshDevices()
-          } else {
-            el.textContent = remaining
+            return
           }
-        }, 1000)
+          el.textContent = remaining
+
+          // Detect new paired device
+          try {
+            const devices = await api.devices()
+            if (knownDeviceCount === null) {
+              knownDeviceCount = devices.length
+            } else if (devices.length > knownDeviceCount) {
+              clearInterval(interval)
+              showInfo(`Device paired successfully`)
+              refreshDevices()
+            }
+          } catch {
+            // server temporarily unreachable — keep polling
+          }
+        }, 2000)
       }
 
       function cancelPairing() {
@@ -627,6 +646,33 @@
         banner.style.borderColor = 'var(--red)'
         banner.style.color = 'var(--red)'
         banner.classList.add('show')
+      }
+
+      function deleteDevice(id, name) {
+        const card = document.getElementById(`device-${id}`)
+        if (!card) return
+        // Replace card content with inline confirmation
+        card.innerHTML = `
+          <div class="card-row">
+            <div style="color:var(--red);font-size:12px">Remove <strong>${name}</strong>? This device will no longer be able to connect.</div>
+            <div style="display:flex;gap:8px;flex-shrink:0;margin-left:12px">
+              <button type="button" class="btn btn-ghost" onclick="refreshDevices()">Cancel</button>
+              <button type="button" class="btn btn-danger" onclick="confirmDeleteDevice('${id}', '${name}')">Remove</button>
+            </div>
+          </div>
+        `
+      }
+
+      async function confirmDeleteDevice(id, name) {
+        try {
+          await api.deleteDevice(id)
+          const card = document.getElementById(`device-${id}`)
+          if (card) card.remove()
+          showInfo(`Device "${name}" removed`)
+        } catch (e) {
+          showError(`Failed to remove device: ${e.message}`)
+          refreshDevices()
+        }
       }
 
       function showInfo(msg) {

@@ -130,9 +130,29 @@ export function connectToHost(host: string, token: string, savedHost?: SavedHost
 }
 
 export function createSession(): void {
-  if (!activeSessionId) return
-  const state = sessions.get(activeSessionId)
-  if (state) state.wsClient.send({ type: 'session:create' })
+  // Try to use the active session's wsClient first
+  if (activeSessionId) {
+    const state = sessions.get(activeSessionId)
+    if (state) {
+      state.wsClient.send({ type: 'session:create' })
+      return
+    }
+  }
+  // Fallback: use any connected client (handles the "all sessions killed" case)
+  for (const client of wsClients.values()) {
+    if (client.isConnected) {
+      client.send({ type: 'session:create' })
+      return
+    }
+  }
+}
+
+// Create a session specifically for a given host address
+export function createSessionForHost(address: string): void {
+  const client = wsClients.get(address)
+  if (client?.isConnected) {
+    client.send({ type: 'session:create' })
+  }
 }
 
 export function killSession(sessionId: string): void {

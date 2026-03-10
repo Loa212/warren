@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useState, useSyncExternalStore } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { DraggableFab } from '@/components/draggable-fab'
 import { TerminalPane } from '@/components/terminal-pane'
 import { Toolbar } from '@/components/toolbar'
+import { getHosts } from '@/lib/connection'
 import {
   activateSession,
   createSession,
+  createSessionForHost,
   getSnapshot,
   killSession,
   sendData,
@@ -17,9 +19,19 @@ export const Route = createFileRoute('/$hostId/terminal')({
 })
 
 function TerminalPage() {
+  const { hostId } = Route.useParams()
   const { sessions, activeSessionId, debugLog } = useSyncExternalStore(subscribe, getSnapshot)
   const sessionList = [...sessions.entries()]
   const [menuOpen, setMenuOpen] = useState(false)
+
+  // When there are no sessions but a WS is connected, create one automatically.
+  // This covers: navigating back after killing all sessions, or returning after a reconnect.
+  useEffect(() => {
+    if (sessionList.length === 0) {
+      const address = getHosts().find((h) => h.id === hostId)?.address
+      if (address) createSessionForHost(address)
+    }
+  }, [hostId, sessionList.length])
 
   return (
     <div className="fixed inset-0 flex flex-col bg-black">

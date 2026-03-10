@@ -67,6 +67,10 @@ const api = {
   devices(): Promise<DeviceInfo[]> {
     return request<DeviceInfo[]>('/api/devices')
   },
+
+  deleteDevice(id: string): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>(`/api/devices/${id}`, { method: 'DELETE' })
+  },
 }
 
 // Make available as a global for the inline script in index.html

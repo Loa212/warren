@@ -296,7 +296,7 @@ export function startServer(options: ServerOptions) {
         return new Response(null, {
           headers: {
             'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
             'Access-Control-Allow-Headers': 'Content-Type',
           },
         })
@@ -368,6 +368,16 @@ export function startServer(options: ServerOptions) {
           permission: d.permission,
         }))
         return new Response(JSON.stringify(devices), {
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        })
+      }
+
+      // Delete paired device
+      if (req.method === 'DELETE' && url.pathname.startsWith('/api/devices/')) {
+        const id = url.pathname.slice('/api/devices/'.length)
+        const { removePairedDevice } = await import('./devices')
+        removePairedDevice(id)
+        return new Response(JSON.stringify({ ok: true }), {
           headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
         })
       }
