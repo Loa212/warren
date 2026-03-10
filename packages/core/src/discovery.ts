@@ -19,7 +19,10 @@ let publishedService: Service | null = null
 
 function getBonjourInstance(): BonjourInstance {
   if (!bonjourInstance) {
-    bonjourInstance = new Bonjour()
+    // reuseAddr: share port 5353 with macOS's built-in mDNSResponder
+    // instead of fighting over it (which triggers hostname conflict dialogs).
+    // The opts object is passed through to multicast-dns which supports reuseAddr.
+    bonjourInstance = new Bonjour({ reuseAddr: true } as Record<string, unknown>)
   }
   return bonjourInstance
 }
