@@ -27,6 +27,7 @@ import {
   getPairedDevice,
   updateDeviceLastSeen,
 } from './devices'
+import { advertise, destroyDiscovery, discoverOnce } from './discovery'
 import { generateQrSvg, startPairing, validatePairingNonce } from './pairing'
 import * as ptyManager from './pty'
 
@@ -383,6 +384,23 @@ export function startServer(options: ServerOptions) {
         })
       }
 
+      // Revoke paired device — set permission to revoked and kill active sessions
+      if (
+        req.method === 'PATCH' &&
+        url.pathname.startsWith('/api/devices/') &&
+        url.pathname.endsWith('/revoke')
+      ) {
+        const id = url.pathname.slice('/api/devices/'.length, -'/revoke'.length)
+        const { revokeDevice } = await import('./devices')
+        revokeDevice(id)
+        for (const s of ptyManager.listSessions().filter((s) => s.deviceId === id)) {
+          ptyManager.killSession(s.id)
+        }
+        return new Response(JSON.stringify({ ok: true }), {
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        })
+      }
+
       // Delete paired device — also kill all active sessions for that device
       if (req.method === 'DELETE' && url.pathname.startsWith('/api/devices/')) {
         const id = url.pathname.slice('/api/devices/'.length)
@@ -392,6 +410,14 @@ export function startServer(options: ServerOptions) {
           ptyManager.killSession(s.id)
         }
         return new Response(JSON.stringify({ ok: true }), {
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        })
+      }
+
+      // Discover other Warren nodes on the LAN
+      if (url.pathname === '/api/discover') {
+        const nodes = await discoverOnce(3000)
+        return new Response(JSON.stringify(nodes), {
           headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
         })
       }
@@ -458,8 +484,26 @@ export function startServer(options: ServerOptions) {
     },
   })
 
+  // Advertise via mDNS on the local network
+  if (config.hostMode) {
+    advertise({
+      version: VERSION,
+      nodeId: config.nodeId,
+      hostName: config.nodeId.slice(0, 8),
+      hostMode: config.hostMode,
+      port,
+    })
+  }
+
   console.log(`Warren server running on ws://localhost:${port}/ws`)
   console.log(`Health: http://localhost:${port}/health`)
+
+  // Wrap the server to clean up mDNS on stop
+  const originalStop = server.stop.bind(server)
+  server.stop = async (closeActiveConnections?: boolean) => {
+    destroyDiscovery()
+    await originalStop(closeActiveConnections)
+  }
 
   return server
 }

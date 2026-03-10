@@ -20,6 +20,7 @@
     "@noble/curves": "^2.0.1",
     "@noble/hashes": "^2.0.1",
     "@warren/types": "workspace:*",
+    "bonjour-service": "^1.3.0",
     "qrcode-terminal": "^0.12.0"
   },
   "devDependencies": {

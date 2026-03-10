@@ -4,7 +4,14 @@
 // Docs: https://blackboard.sh/electrobun/docs/
 
 import { existsSync } from 'node:fs'
-import { generateToken, getOrCreateIdentity, loadConfig, startServer } from '@warren/core'
+import {
+  generateToken,
+  getOrCreateIdentity,
+  listPairedDevices,
+  loadConfig,
+  startServer,
+  updateConfig,
+} from '@warren/core'
 import { BrowserWindow, Tray } from 'electrobun/bun'
 
 // ---------------------------------------------------------------------------
@@ -35,6 +42,31 @@ console.log(`[warren] Public key: ${identity.publicKey}`)
 // Tray
 // ---------------------------------------------------------------------------
 
+let hostMode = config.hostMode
+
+function buildTrayMenu() {
+  const devices = listPairedDevices()
+  const activeCount = devices.filter((d) => d.permission === 'full').length
+
+  return [
+    {
+      type: 'normal' as const,
+      label: `Host Mode: ${hostMode ? 'On' : 'Off'}`,
+      action: 'toggle-host',
+    },
+    {
+      type: 'normal' as const,
+      label: `Devices: ${activeCount} paired`,
+      action: 'noop',
+    },
+    { type: 'separator' as const },
+    { type: 'normal' as const, label: 'Show QR Code', action: 'qr' },
+    { type: 'normal' as const, label: 'Open Dashboard', action: 'dashboard' },
+    { type: 'separator' as const },
+    { type: 'normal' as const, label: 'Quit Warren', action: 'quit' },
+  ]
+}
+
 // TODO: Convert iconTemplate.svg to a 32x32 PNG template image for macOS
 const tray = new Tray({
   image: 'views://assets/iconTemplate.svg',
@@ -42,11 +74,11 @@ const tray = new Tray({
   title: '',
 })
 
-tray.setMenu([
-  { type: 'normal', label: 'Open Dashboard', action: 'dashboard' },
-  { type: 'separator' },
-  { type: 'normal', label: 'Quit Warren', action: 'quit' },
-])
+function refreshTray(): void {
+  tray.setMenu(buildTrayMenu())
+}
+
+refreshTray()
 
 tray.on('tray-clicked', () => {
   toggleDashboard()
@@ -60,8 +92,19 @@ tray.on('tray-item-clicked', (_event) => {
     server.stop()
     tray.remove()
     process.exit(0)
+  } else if (action === 'toggle-host') {
+    hostMode = !hostMode
+    updateConfig({ hostMode })
+    refreshTray()
+    console.log(`[warren] Host mode: ${hostMode ? 'on' : 'off'}`)
+  } else if (action === 'qr') {
+    showDashboard()
+    // The dashboard will auto-trigger pairing QR display
   }
 })
+
+// Refresh tray menu periodically to update device count
+const trayRefreshInterval = setInterval(refreshTray, 30_000)
 
 // ---------------------------------------------------------------------------
 // Dashboard Window
@@ -103,6 +146,7 @@ function toggleDashboard(): void {
 console.log('[warren] App ready. Click the tray icon to open the dashboard.')
 
 process.on('SIGTERM', () => {
+  clearInterval(trayRefreshInterval)
   server.stop()
   tray.remove()
   process.exit(0)
