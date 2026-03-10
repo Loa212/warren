@@ -6,6 +6,7 @@
 
 import { networkInterfaces } from 'node:os'
 import type { QrPayload } from '@warren/types'
+import QRCode from 'qrcode'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -113,4 +114,13 @@ export function getActivePairingSessions(): PairingSession[] {
     if (now > session.expiresAt) activeSessions.delete(key)
   }
   return [...activeSessions.values()]
+}
+
+export async function generateQrSvg(text: string): Promise<string> {
+  return QRCode.toString(text, {
+    type: 'svg',
+    color: { dark: '#d4c8f0', light: '#12111a' },
+    margin: 1,
+    width: 200,
+  })
 }

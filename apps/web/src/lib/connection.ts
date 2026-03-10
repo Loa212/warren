@@ -16,6 +16,7 @@ export interface SavedHost {
   devicePrivateKey?: string // this device's private key for this host (base64)
   sharedSecret?: string // derived shared secret (base64)
   authVersion?: 'v1' | 'v2'
+  deviceId?: string // server-assigned after pairing
 }
 
 const STORAGE_KEY = 'warren:hosts'

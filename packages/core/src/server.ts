@@ -27,7 +27,7 @@ import {
   getPairedDevice,
   updateDeviceLastSeen,
 } from './devices'
-import { validatePairingNonce } from './pairing'
+import { generateQrSvg, startPairing, validatePairingNonce } from './pairing'
 import * as ptyManager from './pty'
 
 const VERSION = '0.2.0'
@@ -279,7 +279,7 @@ export function startServer(options: ServerOptions) {
   const server = Bun.serve<WsData>({
     port,
 
-    fetch(req, server) {
+    async fetch(req, server) {
       const url = new URL(req.url)
 
       // CORS preflight — needed for WebKit webviews fetching from views:// origin
@@ -323,6 +323,21 @@ export function startServer(options: ServerOptions) {
         }
 
         return undefined
+      }
+
+      // Pair start endpoint — generates a QR code + PIN for the pairing flow
+      if (url.pathname === '/api/pair/start') {
+        const identity = getOrCreateIdentity()
+        const session = await startPairing(port, identity.publicKey)
+        // Use server port if staticDir present (production), else 3000 (dev with separate Vite)
+        const webPort = staticDir ? port : 3000
+        const hostIp = session.qrPayload.host.split(':')[0]
+        const pairUrl = `http://${hostIp}:${webPort}/pair?host=${encodeURIComponent(session.qrPayload.host)}&nonce=${encodeURIComponent(session.qrPayload.nonce)}&publicKey=${encodeURIComponent(session.qrPayload.publicKey)}&version=0.2`
+        const qrSvg = await generateQrSvg(pairUrl)
+        return new Response(
+          JSON.stringify({ pin: session.pin, expiresAt: session.expiresAt, pairUrl, qrSvg }),
+          { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } },
+        )
       }
 
       // Health endpoint

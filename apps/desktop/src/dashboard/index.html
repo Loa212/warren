@@ -521,9 +521,58 @@
         `
       }
 
-      function _pairNewDevice() {
-        // TODO(v0.2): Trigger QR code display via IPC to main process
-        showInfo('QR pairing coming in v0.2 — run `bun run dev:web` to test the pairing flow')
+      async function _pairNewDevice() {
+        const btn = document.querySelector('[onclick="_pairNewDevice()"]')
+        btn.disabled = true
+        btn.textContent = 'Generating…'
+        try {
+          const data = await api.startPairing()
+          showPairingCard(data)
+        } catch (e) {
+          showError(`Could not start pairing: ${e.message}`)
+        } finally {
+          btn.disabled = false
+          btn.textContent = '+ Pair Device'
+        }
+      }
+
+      function showPairingCard(data) {
+        const list = document.getElementById('devices-list')
+        const expiresIn = Math.floor((data.expiresAt - Date.now()) / 1000)
+        list.innerHTML = `
+          <div class="card" style="text-align:center">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <div class="card-title">Scan to pair</div>
+              <button type="button" class="btn btn-ghost" onclick="cancelPairing()">Cancel</button>
+            </div>
+            <div id="qr-container" style="display:inline-block;background:#12111a;padding:12px;border-radius:8px;margin-bottom:12px">
+              ${data.qrSvg}
+            </div>
+            <div style="margin-bottom:8px">
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em">PIN</div>
+              <div style="font-size:28px;font-weight:700;font-family:monospace;letter-spacing:.2em;color:var(--accent)">${data.pin}</div>
+            </div>
+            <div style="font-size:11px;color:var(--text-muted)">
+              Expires in <span id="pair-countdown">${expiresIn}</span>s
+            </div>
+          </div>
+        `
+        // Start countdown
+        const interval = setInterval(() => {
+          const el = document.getElementById('pair-countdown')
+          if (!el) { clearInterval(interval); return }
+          const remaining = Math.floor((data.expiresAt - Date.now()) / 1000)
+          if (remaining <= 0) {
+            clearInterval(interval)
+            refreshDevices()
+          } else {
+            el.textContent = remaining
+          }
+        }, 1000)
+      }
+
+      function cancelPairing() {
+        refreshDevices()
       }
 
       function _saveSetting(key, value) {

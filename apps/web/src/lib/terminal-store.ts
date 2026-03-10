@@ -88,7 +88,7 @@ export function connectToHost(host: string, token: string, savedHost?: SavedHost
   // Determine connection URL based on auth version
   let wsUrl: string
   if (savedHost?.authVersion === 'v2' && savedHost.sharedSecret) {
-    wsUrl = `ws://${host}/ws?deviceId=${encodeURIComponent(getDeviceId())}`
+    wsUrl = `ws://${host}/ws?deviceId=${encodeURIComponent(savedHost?.deviceId ?? getDeviceId())}`
   } else {
     wsUrl = `ws://${host}/ws?token=${encodeURIComponent(token)}`
   }
@@ -170,7 +170,11 @@ function handleMessage(
         // v0.2: Sign challenge nonce with HMAC using shared secret
         const secretKey = fromBase64(savedHost.sharedSecret)
         hmacSign(msg.nonce, { key: secretKey }).then((sig) => {
-          wsClient.send({ type: 'auth:response', signature: sig, deviceId: getDeviceId() })
+          wsClient.send({
+            type: 'auth:response',
+            signature: sig,
+            deviceId: savedHost?.deviceId ?? getDeviceId(),
+          })
         })
       } else {
         // v0.1: Send token as signature

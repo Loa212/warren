@@ -27,9 +27,20 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json() as Promise<T>
 }
 
+export interface PairStartResponse {
+  pin: string
+  expiresAt: number
+  pairUrl: string
+  qrSvg: string
+}
+
 const api = {
   health(): Promise<HealthResponse> {
     return request<HealthResponse>('/health')
+  },
+
+  startPairing(): Promise<PairStartResponse> {
+    return request<PairStartResponse>('/api/pair/start')
   },
 
   // TODO: Add more endpoints as the server exposes them:

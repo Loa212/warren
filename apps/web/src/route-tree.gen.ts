@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as PairRouteImport } from './routes/pair'
 import { Route as ConnectRouteImport } from './routes/connect'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as HostIdTerminalRouteImport } from './routes/$hostId/terminal'
@@ -17,6 +18,11 @@ import { Route as HostIdTerminalRouteImport } from './routes/$hostId/terminal'
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PairRoute = PairRouteImport.update({
+  id: '/pair',
+  path: '/pair',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConnectRoute = ConnectRouteImport.update({
@@ -38,12 +44,14 @@ const HostIdTerminalRoute = HostIdTerminalRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/connect': typeof ConnectRoute
+  '/pair': typeof PairRoute
   '/settings': typeof SettingsRoute
   '/$hostId/terminal': typeof HostIdTerminalRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/connect': typeof ConnectRoute
+  '/pair': typeof PairRoute
   '/settings': typeof SettingsRoute
   '/$hostId/terminal': typeof HostIdTerminalRoute
 }
@@ -51,20 +59,28 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/connect': typeof ConnectRoute
+  '/pair': typeof PairRoute
   '/settings': typeof SettingsRoute
   '/$hostId/terminal': typeof HostIdTerminalRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/connect' | '/settings' | '/$hostId/terminal'
+  fullPaths: '/' | '/connect' | '/pair' | '/settings' | '/$hostId/terminal'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/connect' | '/settings' | '/$hostId/terminal'
-  id: '__root__' | '/' | '/connect' | '/settings' | '/$hostId/terminal'
+  to: '/' | '/connect' | '/pair' | '/settings' | '/$hostId/terminal'
+  id:
+    | '__root__'
+    | '/'
+    | '/connect'
+    | '/pair'
+    | '/settings'
+    | '/$hostId/terminal'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConnectRoute: typeof ConnectRoute
+  PairRoute: typeof PairRoute
   SettingsRoute: typeof SettingsRoute
   HostIdTerminalRoute: typeof HostIdTerminalRoute
 }
@@ -76,6 +92,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pair': {
+      id: '/pair'
+      path: '/pair'
+      fullPath: '/pair'
+      preLoaderRoute: typeof PairRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/connect': {
@@ -105,6 +128,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConnectRoute: ConnectRoute,
+  PairRoute: PairRoute,
   SettingsRoute: SettingsRoute,
   HostIdTerminalRoute: HostIdTerminalRoute,
 }
