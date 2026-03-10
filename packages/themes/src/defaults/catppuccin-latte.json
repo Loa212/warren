@@ -1,0 +1,39 @@
+{
+  "name": "Catppuccin Latte",
+  "author": "catppuccin (ported)",
+  "version": "1.0.0",
+  "colors": {
+    "background": "#eff1f5",
+    "foreground": "#4c4f69",
+    "cursor": "#dc8a78",
+    "cursorAccent": "#eff1f5",
+    "selection": "#acb0be",
+    "black": "#5c5f77",
+    "red": "#d20f39",
+    "green": "#40a02b",
+    "yellow": "#df8e1d",
+    "blue": "#1e66f5",
+    "magenta": "#8839ef",
+    "cyan": "#179299",
+    "white": "#acb0be",
+    "brightBlack": "#6c6f85",
+    "brightRed": "#d20f39",
+    "brightGreen": "#40a02b",
+    "brightYellow": "#df8e1d",
+    "brightBlue": "#1e66f5",
+    "brightMagenta": "#8839ef",
+    "brightCyan": "#179299",
+    "brightWhite": "#bcc0cc"
+  },
+  "ui": {
+    "accent": "#8839ef",
+    "border": "#ccd0da",
+    "tabBar": "#e6e9ef",
+    "activeTab": "#eff1f5"
+  },
+  "font": {
+    "family": "JetBrains Mono, Fira Code, monospace",
+    "size": 14,
+    "lineHeight": 1.5
+  }
+}

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import 'xterm/css/xterm.css'
 import type { SessionState } from '@/lib/terminal-store'
 import { resizeActiveSession } from '@/lib/terminal-store'
@@ -12,33 +12,42 @@ export function TerminalPane({ sessionState, isActive }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mounted = useRef(false)
 
-  // Open terminal into DOM on first render
+  // Open terminal into DOM once
   useEffect(() => {
     const el = containerRef.current
     if (!el || mounted.current) return
 
+    // Clear stale children (React StrictMode double-mount)
+    el.innerHTML = ''
     sessionState.terminal.open(el)
-    sessionState.fitAddon.fit()
     mounted.current = true
 
+    requestAnimationFrame(() => {
+      sessionState.fitAddon.fit()
+      if (isActive) sessionState.terminal.focus()
+    })
+
     return () => {
-      // Terminal disposal is handled by the store
       mounted.current = false
     }
   }, [sessionState])
 
-  // Fit + focus when activated
+  // Focus + fit when this pane becomes active
   useEffect(() => {
     if (!isActive || !mounted.current) return
 
-    // Small delay to ensure the pane is visible before fitting
     const timer = setTimeout(() => {
       sessionState.fitAddon.fit()
       sessionState.terminal.focus()
       resizeActiveSession(sessionState.terminal.cols, sessionState.terminal.rows)
-    }, 10)
+    }, 50)
 
     return () => clearTimeout(timer)
+  }, [isActive, sessionState])
+
+  // Re-focus terminal on click (e.g. after toolbar steals focus)
+  const handleClick = useCallback(() => {
+    if (isActive) sessionState.terminal.focus()
   }, [isActive, sessionState])
 
   // Resize observer
@@ -47,7 +56,7 @@ export function TerminalPane({ sessionState, isActive }: Props) {
     if (!el) return
 
     const observer = new ResizeObserver(() => {
-      if (!isActive) return
+      if (!isActive || !mounted.current) return
       sessionState.fitAddon.fit()
       resizeActiveSession(sessionState.terminal.cols, sessionState.terminal.rows)
     })
@@ -59,6 +68,7 @@ export function TerminalPane({ sessionState, isActive }: Props) {
   return (
     <div
       ref={containerRef}
+      onClick={handleClick}
       className="absolute inset-0"
       style={{ display: isActive ? 'block' : 'none' }}
     />

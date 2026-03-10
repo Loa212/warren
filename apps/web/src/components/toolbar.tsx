@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react'
 
 interface Props {
-  onBack: () => void
   onSend: (data: string) => void
 }
 
@@ -15,7 +14,7 @@ const ESCAPE_SEQUENCES: Record<string, string> = {
   pipe: '|',
 }
 
-const BUTTONS = [
+const KEYS = [
   { action: 'esc', label: 'Esc' },
   { action: 'ctrl', label: 'Ctrl' },
   { action: 'alt', label: 'Alt' },
@@ -25,19 +24,19 @@ const BUTTONS = [
   { action: 'left', label: '←' },
   { action: 'right', label: '→' },
   { action: 'pipe', label: '|' },
-  { action: 'back', label: '⌂' },
 ]
 
-export function Toolbar({ onBack, onSend }: Props) {
+const btnBase =
+  'shrink-0 min-w-[44px] h-11 rounded-md text-[13px] flex items-center justify-center my-1 mx-0.5 px-2 whitespace-nowrap transition-colors border'
+const btnNormal = `${btnBase} bg-secondary border-border text-foreground active:bg-muted active:text-primary`
+const btnActive = `${btnBase} bg-primary text-primary-foreground border-primary`
+
+export function Toolbar({ onSend }: Props) {
   const [ctrlActive, setCtrlActive] = useState(false)
   const [altActive, setAltActive] = useState(false)
 
   const handleAction = useCallback(
     (action: string) => {
-      if (action === 'back') {
-        onBack()
-        return
-      }
       if (action === 'ctrl') {
         setCtrlActive((v) => !v)
         return
@@ -62,12 +61,12 @@ export function Toolbar({ onBack, onSend }: Props) {
 
       onSend(sequence)
     },
-    [ctrlActive, altActive, onBack, onSend],
+    [ctrlActive, altActive, onSend],
   )
 
   return (
-    <div className="flex bg-bg border-t border-border overflow-x-auto shrink-0 pb-[env(safe-area-inset-bottom)] gap-0.5 px-1 scrollbar-none">
-      {BUTTONS.map(({ action, label }) => {
+    <div className="flex bg-background border-t overflow-x-auto shrink-0 pb-[env(safe-area-inset-bottom)] gap-0.5 px-1 scrollbar-none">
+      {KEYS.map(({ action, label }) => {
         const isModifier = action === 'ctrl' || action === 'alt'
         const isActive = (action === 'ctrl' && ctrlActive) || (action === 'alt' && altActive)
 
@@ -76,16 +75,13 @@ export function Toolbar({ onBack, onSend }: Props) {
             key={action}
             onClick={() => handleAction(action)}
             onTouchEnd={(e) => e.preventDefault()}
-            className={`shrink-0 min-w-[44px] h-11 rounded-md text-[13px] flex items-center justify-center my-1 mx-0.5 px-2 whitespace-nowrap transition-colors border ${
-              isModifier && isActive
-                ? 'bg-accent-dim text-bg border-accent'
-                : 'bg-bg2 border-border text-text active:bg-bg3 active:text-accent'
-            }`}
+            className={isModifier && isActive ? btnActive : btnNormal}
           >
             {label}
           </button>
         )
       })}
+
     </div>
   )
 }

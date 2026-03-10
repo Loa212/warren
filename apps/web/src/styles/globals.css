@@ -1,18 +1,5 @@
 @import 'tailwindcss';
 
-@theme {
-  --color-bg: #12111a;
-  --color-bg2: #1e1b2e;
-  --color-bg3: #2d2545;
-  --color-text: #d4c8f0;
-  --color-muted: #8b7fb8;
-  --color-accent: #b794f4;
-  --color-accent-dim: #6d5da8;
-  --color-border: #2d2545;
-  --color-green: #a8d8a8;
-  --color-red: #f28b82;
-}
-
 *,
 *::before,
 *::after {
@@ -29,4 +16,73 @@ html, body {
 }
 .xterm-viewport {
   overflow-y: hidden !important;
+}
+
+/* Default theme vars — overridden at runtime by applyAppTheme() */
+:root {
+  --background: #12111a;
+  --foreground: #d4c8f0;
+  --card: #0e0d14;
+  --card-foreground: #d4c8f0;
+  --popover: #0e0d14;
+  --popover-foreground: #d4c8f0;
+  --primary: #b794f4;
+  --primary-foreground: #12111a;
+  --secondary: #1e1b2e;
+  --secondary-foreground: #d4c8f0;
+  --muted: #1e1b2e;
+  --muted-foreground: #8b7fb8;
+  --accent: #1e1b2e;
+  --accent-foreground: #d4c8f0;
+  --destructive: #f28b82;
+  --border: #2d2545;
+  --input: #2d2545;
+  --ring: #b794f4;
+  --radius: 0.625rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+
+  /* Warren custom tokens */
+  --color-warren-bg: #12111a;
+  --color-warren-bg2: #1e1b2e;
+  --color-warren-bg3: #2d2545;
+  --color-warren-text: #d4c8f0;
+  --color-warren-muted: #8b7fb8;
+  --color-warren-accent: #b794f4;
+  --color-warren-accent-dim: #6d5da8;
+  --color-warren-green: #a8d8a8;
+  --color-warren-red: #f28b82;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }

@@ -9,18 +9,19 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TerminalRouteImport } from './routes/terminal'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ConnectRouteImport } from './routes/connect'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as HostIdTerminalRouteImport } from './routes/$hostId/terminal'
 
-const TerminalRoute = TerminalRouteImport.update({
-  id: '/terminal',
-  path: '/terminal',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConnectRoute = ConnectRouteImport.update({
+  id: '/connect',
+  path: '/connect',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -28,51 +29,60 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HostIdTerminalRoute = HostIdTerminalRouteImport.update({
+  id: '/$hostId/terminal',
+  path: '/$hostId/terminal',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/connect': typeof ConnectRoute
   '/settings': typeof SettingsRoute
-  '/terminal': typeof TerminalRoute
+  '/$hostId/terminal': typeof HostIdTerminalRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/connect': typeof ConnectRoute
   '/settings': typeof SettingsRoute
-  '/terminal': typeof TerminalRoute
+  '/$hostId/terminal': typeof HostIdTerminalRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/connect': typeof ConnectRoute
   '/settings': typeof SettingsRoute
-  '/terminal': typeof TerminalRoute
+  '/$hostId/terminal': typeof HostIdTerminalRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/settings' | '/terminal'
+  fullPaths: '/' | '/connect' | '/settings' | '/$hostId/terminal'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/settings' | '/terminal'
-  id: '__root__' | '/' | '/settings' | '/terminal'
+  to: '/' | '/connect' | '/settings' | '/$hostId/terminal'
+  id: '__root__' | '/' | '/connect' | '/settings' | '/$hostId/terminal'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ConnectRoute: typeof ConnectRoute
   SettingsRoute: typeof SettingsRoute
-  TerminalRoute: typeof TerminalRoute
+  HostIdTerminalRoute: typeof HostIdTerminalRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/terminal': {
-      id: '/terminal'
-      path: '/terminal'
-      fullPath: '/terminal'
-      preLoaderRoute: typeof TerminalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/settings': {
       id: '/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/connect': {
+      id: '/connect'
+      path: '/connect'
+      fullPath: '/connect'
+      preLoaderRoute: typeof ConnectRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -82,13 +92,21 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$hostId/terminal': {
+      id: '/$hostId/terminal'
+      path: '/$hostId/terminal'
+      fullPath: '/$hostId/terminal'
+      preLoaderRoute: typeof HostIdTerminalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ConnectRoute: ConnectRoute,
   SettingsRoute: SettingsRoute,
-  TerminalRoute: TerminalRoute,
+  HostIdTerminalRoute: HostIdTerminalRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

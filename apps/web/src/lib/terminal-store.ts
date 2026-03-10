@@ -5,7 +5,8 @@ import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 import type { TerminalSession, WsMessage } from '@warren/types'
 import { WarrenWsClient } from './ws-client'
-import { applyTheme } from './theme'
+import { applyTerminalTheme } from './theme'
+import { uuid } from './utils'
 
 export interface SessionState {
   session: TerminalSession
@@ -36,7 +37,7 @@ function emit(): void {
 function getDeviceId(): string {
   let id = localStorage.getItem('warren:deviceId')
   if (!id) {
-    id = crypto.randomUUID()
+    id = uuid()
     localStorage.setItem('warren:deviceId', id)
   }
   return id
@@ -58,14 +59,17 @@ export function getSnapshot(): {
 
 // ─── Actions ────────────────────────────────────────────────────────────────
 
-export function connectToHost(host: string, token: string): void {
-  const existing = wsClients.get(host)
-  if (existing) {
-    existing.send({ type: 'session:create' })
-    return
+export function hasSessionsForHost(host: string): boolean {
+  for (const state of sessions.values()) {
+    if (state.host === host) return true
   }
+  return false
+}
 
-  const wsClient = new WarrenWsClient(`ws://${host}/ws`)
+export function connectToHost(host: string, token: string): void {
+  if (wsClients.has(host)) return
+
+  const wsClient = new WarrenWsClient(`ws://${host}/ws?token=${encodeURIComponent(token)}`)
   wsClients.set(host, wsClient)
 
   wsClient.onOpen(() => {
@@ -108,6 +112,10 @@ export function sendData(data: string): void {
   if (state) {
     state.wsClient.send({ type: 'terminal:data', sessionId: activeSessionId, data })
   }
+}
+
+export function getAllTerminals(): import('xterm').Terminal[] {
+  return [...sessions.values()].map((s) => s.terminal)
 }
 
 export function resizeActiveSession(cols: number, rows: number): void {
@@ -180,7 +188,7 @@ function addSession(session: TerminalSession, host: string, wsClient: WarrenWsCl
   })
 
   const savedTheme = localStorage.getItem('warren:theme') ?? 'tokyo-night'
-  applyTheme(terminal, savedTheme)
+  applyTerminalTheme(terminal, savedTheme)
 
   sessions.set(session.id, { session, terminal, fitAddon, wsClient, host })
   activeSessionId = session.id

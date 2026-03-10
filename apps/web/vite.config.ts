@@ -9,6 +9,7 @@ export default defineConfig({
     TanStackRouterVite({
       routesDirectory: './src/routes',
       generatedRouteTree: './src/route-tree.gen.ts',
+      quoteStyle: 'single',
     }),
     react(),
     tailwindcss(),
@@ -28,5 +29,8 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
+    watch: {
+      ignored: ['**/route-tree.gen.ts'],
+    },
   },
 })

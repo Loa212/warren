@@ -1,5 +1,7 @@
 // Connection manager — saved hosts in localStorage
 
+import { uuid } from './utils'
+
 export interface SavedHost {
   id: string
   name: string
@@ -22,7 +24,7 @@ export function getHosts(): SavedHost[] {
 
 export function addHost(host: Omit<SavedHost, 'id'>): SavedHost {
   const hosts = getHosts()
-  const newHost: SavedHost = { ...host, id: crypto.randomUUID() }
+  const newHost: SavedHost = { ...host, id: uuid() }
   hosts.push(newHost)
   localStorage.setItem(STORAGE_KEY, JSON.stringify(hosts))
   return newHost
