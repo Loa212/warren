@@ -1,24 +1,39 @@
 // Electrobun configuration for Warren desktop app
-// Docs: https://blackboard.sh/electrobun/docs/
+// Docs: https://blackboard.sh/electrobun/docs/apis/cli/build-configuration
 
 import type { ElectrobunConfig } from 'electrobun'
 
-const config: ElectrobunConfig = {
+export default {
   app: {
     name: 'Warren',
-    version: '0.1.0',
     identifier: 'sh.warren.app',
+    version: '0.1.0',
+  },
+  runtime: {
+    // Tray apps must keep running when all windows are closed
+    exitOnLastWindowClosed: false,
   },
   build: {
     bun: {
-      entrypoint: 'src/index.ts',
+      entrypoint: 'src/bun/index.ts',
     },
     views: {
       dashboard: {
-        entrypoint: 'src/views/dashboard/api.ts',
+        entrypoint: 'src/dashboard/index.ts',
       },
     },
+    copy: {
+      'src/dashboard/index.html': 'views/dashboard/index.html',
+      'src/assets/iconTemplate.svg': 'views/assets/iconTemplate.svg',
+    },
+    mac: {
+      bundleCEF: false,
+    },
+    linux: {
+      bundleCEF: false,
+    },
+    win: {
+      bundleCEF: false,
+    },
   },
-}
-
-export default config
+} satisfies ElectrobunConfig

@@ -1,62 +1,133 @@
-// Local type stub for Electrobun.
+// Local type stubs for Electrobun.
 // The published package ships TypeScript source with internal type errors.
-// This stub provides correct types for the APIs used in Warren's desktop app,
+// These stubs provide correct types for the APIs used in Warren's desktop app,
 // bypassing Electrobun's source so TypeScript doesn't follow into its broken deps.
 // Keep in sync with Electrobun v1.15+ API.
 
-export interface TrayOptions {
-  title?: string
-  image?: string
-  template?: boolean
-  width?: number
-  height?: number
-}
-
-export declare class Tray {
-  constructor(options?: TrayOptions)
-  on(event: 'tray-clicked', handler: () => void): this
-  setTitle(title: string): void
-  setImage(image: string): void
-}
-
-export interface WindowFrame {
-  x: number
-  y: number
-  width: number
-  height: number
-}
-
-export interface WindowOptions {
-  title: string
-  frame: WindowFrame
-  url?: string | null
-  html?: string | null
-  preload?: string | null
-  renderer?: 'native' | 'cef'
-  titleBarStyle?: 'hidden' | 'hiddenInset' | 'default'
-  transparent?: boolean
-  navigationRules?: string | null
-  sandbox?: boolean
-}
-
-export declare class BrowserWindow {
-  constructor(options: WindowOptions)
-  close(): void
-  focus(): void
-}
-
-export interface ElectrobunConfig {
-  app: {
-    name: string
-    identifier: string
-    version: string
-    description?: string
-    urlSchemes?: string[]
+declare module 'electrobun/bun' {
+  // -------------------------------------------------------------------------
+  // Tray
+  // -------------------------------------------------------------------------
+  export interface TrayOptions {
+    title?: string
+    image?: string
+    template?: boolean
+    width?: number
+    height?: number
   }
-  build?: {
-    bun?: { entrypoint?: string; [key: string]: unknown }
-    views?: Record<string, { entrypoint: string; [key: string]: unknown }>
-    copy?: Record<string, string>
-    [key: string]: unknown
+
+  export interface TrayMenuItem {
+    type: 'normal' | 'separator'
+    label?: string
+    action?: string
+  }
+
+  export class Tray {
+    constructor(options?: TrayOptions)
+    on(event: 'tray-clicked', handler: () => void): this
+    on(
+      event: 'tray-item-clicked',
+      handler: (event: { data?: { action?: string } }) => void,
+    ): this
+    setTitle(title: string): void
+    setImage(image: string): void
+    setMenu(items: TrayMenuItem[]): void
+    remove(): void
+  }
+
+  // -------------------------------------------------------------------------
+  // BrowserWindow
+  // -------------------------------------------------------------------------
+  export interface WindowFrame {
+    x: number
+    y: number
+    width: number
+    height: number
+  }
+
+  export interface WindowOptions {
+    title: string
+    frame: WindowFrame
+    url?: string
+    html?: string
+    titleBarStyle?: 'hidden' | 'hiddenInset' | 'default'
+    transparent?: boolean
+    sandbox?: boolean
+  }
+
+  export class BrowserWindow {
+    constructor(options: WindowOptions)
+    close(): void
+    focus(): void
+    minimize(): void
+    maximize(): void
+    on(event: 'close', handler: () => void): this
+  }
+}
+
+declare module 'electrobun' {
+  // -------------------------------------------------------------------------
+  // Config (used in electrobun.config.ts)
+  // -------------------------------------------------------------------------
+  export interface ElectrobunConfig {
+    app: {
+      name: string
+      identifier: string
+      version: string
+      description?: string
+      urlSchemes?: string[]
+    }
+    runtime?: {
+      exitOnLastWindowClosed?: boolean
+      [key: string]: unknown
+    }
+    build?: {
+      bunVersion?: string
+      useAsar?: boolean
+      asarUnpack?: string[]
+      watch?: string[]
+      watchIgnore?: string[]
+      bun?: {
+        entrypoint: string
+        external?: string[]
+        minify?: boolean
+        sourcemap?: 'none' | 'linked' | 'inline' | 'external'
+        [key: string]: unknown
+      }
+      views?: Record<
+        string,
+        { entrypoint: string; [key: string]: unknown }
+      >
+      copy?: Record<string, string>
+      mac?: {
+        bundleCEF?: boolean
+        defaultRenderer?: 'native' | 'cef'
+        codesign?: boolean
+        notarize?: boolean
+        icons?: string
+        entitlements?: Record<string, string>
+        [key: string]: unknown
+      }
+      linux?: {
+        bundleCEF?: boolean
+        defaultRenderer?: 'native' | 'cef'
+        [key: string]: unknown
+      }
+      win?: {
+        bundleCEF?: boolean
+        defaultRenderer?: 'native' | 'cef'
+        [key: string]: unknown
+      }
+      [key: string]: unknown
+    }
+    scripts?: {
+      preBuild?: string
+      postBuild?: string
+      postWrap?: string
+      postPackage?: string
+    }
+    release?: {
+      baseUrl?: string
+    }
   }
 }

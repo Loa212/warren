@@ -1,12 +1,10 @@
-// Requires Electrobun v1+ — run: npx electrobun init (tray-app template) then copy this code
-//
 // Warren Desktop — Electrobun main process
 //
 // Electrobun APIs verified against v1.15.1.
 // Docs: https://blackboard.sh/electrobun/docs/
 
 import { generateToken, loadConfig, startServer } from '@warren/core'
-import { BrowserWindow, Tray } from 'electrobun'
+import { BrowserWindow, Tray } from 'electrobun/bun'
 
 // ---------------------------------------------------------------------------
 // Config & Server
@@ -20,7 +18,7 @@ const token = generateToken()
 const server = startServer({
   port: config.port,
   token,
-  staticDir: new URL('../../../web/dist', import.meta.url).pathname,
+  staticDir: new URL('../../../../web/dist', import.meta.url).pathname,
   config,
 })
 
@@ -31,18 +29,33 @@ console.log(`[warren] Token: ${token}`)
 // Tray
 // ---------------------------------------------------------------------------
 
-const _hostMode = config.hostMode
-
-// TrayOptions: { title?, image?, template?, width?, height? }
-// TODO: Create tray icon at src/assets/tray-icon.png (16x16 template image)
+// TODO: Convert iconTemplate.svg to a 32x32 PNG template image for macOS
 const tray = new Tray({
-  image: 'src/assets/tray-icon.png',
+  image: 'views://assets/iconTemplate.svg',
   template: true,
   title: '',
 })
 
-// 'tray-clicked' is the Electrobun event for tray icon click
-tray.on('tray-clicked', () => toggleDashboard())
+tray.setMenu([
+  { type: 'normal', label: 'Open Dashboard', action: 'dashboard' },
+  { type: 'separator' },
+  { type: 'normal', label: 'Quit Warren', action: 'quit' },
+])
+
+tray.on('tray-clicked', () => {
+  toggleDashboard()
+})
+
+tray.on('tray-item-clicked', (_event) => {
+  const action = _event?.data?.action
+  if (action === 'dashboard') {
+    showDashboard()
+  } else if (action === 'quit') {
+    server.stop()
+    tray.remove()
+    process.exit(0)
+  }
+})
 
 // ---------------------------------------------------------------------------
 // Dashboard Window
@@ -51,26 +64,26 @@ tray.on('tray-clicked', () => toggleDashboard())
 let dashboardWindow: InstanceType<typeof BrowserWindow> | null = null
 
 function showDashboard(): void {
-  if (!dashboardWindow) {
-    // WindowOptionsType requires frame: { x, y, width, height }
-    dashboardWindow = new BrowserWindow({
-      title: 'Warren',
-      frame: { x: 100, y: 100, width: 900, height: 600 },
-      html: 'dashboard/index.html',
-      url: null,
-      preload: null,
-      renderer: 'native',
-      titleBarStyle: 'hiddenInset',
-      transparent: false,
-      navigationRules: null,
-      sandbox: false,
-    })
+  if (dashboardWindow) {
+    dashboardWindow.focus()
+    return
   }
+
+  dashboardWindow = new BrowserWindow({
+    title: 'Warren',
+    url: 'views://dashboard/index.html',
+    frame: { x: 100, y: 100, width: 900, height: 600 },
+    titleBarStyle: 'hiddenInset',
+  })
+
+  dashboardWindow.on('close', () => {
+    dashboardWindow = null
+  })
 }
 
 function toggleDashboard(): void {
   if (dashboardWindow) {
-    // TODO: BrowserWindow.close() or hide() — check Electrobun docs for exact API
+    dashboardWindow.close()
     dashboardWindow = null
   } else {
     showDashboard()
@@ -85,5 +98,6 @@ console.log('[warren] App ready. Click the tray icon to open the dashboard.')
 
 process.on('SIGTERM', () => {
   server.stop()
+  tray.remove()
   process.exit(0)
 })

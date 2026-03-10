@@ -7,24 +7,20 @@ framework using system webviews. ~14MB bundle, TypeScript throughout, no Electro
 
 ## Setup
 
-Electrobun requires an initial project scaffold before the Warren source will run:
-
 ```bash
-# 1. Initialize Electrobun (from this directory)
-cd apps/desktop
-npx electrobun init
-# Choose "tray-app" template when prompted
-
-# 2. Install dependencies
+# From the repo root
 bun install
 
-# 3. Run in dev mode
+# Run in dev mode
+cd apps/desktop
 bun run dev
+
+# Build .app bundle
+bun run build
 ```
 
-> **Why the manual init?** Electrobun generates native boilerplate (Swift tray bindings,
-> build scripts) that varies by platform. The Warren source in `src/` is the application
-> logic that sits on top of that scaffold.
+> **Note:** On first run, Electrobun downloads platform-specific binaries to
+> `node_modules/.electrobun-cache/`. This is automatic — no manual init needed.
 
 ## Structure
 
@@ -32,19 +28,23 @@ bun run dev
 apps/desktop/
 ├── electrobun.config.ts   # App configuration (windows, build settings)
 ├── src/
-│   ├── index.ts           # Main Bun process (server, tray, windows)
-│   └── views/
-│       └── dashboard/
-│           ├── index.html # Dashboard UI
-│           └── api.ts     # HTTP client for Warren server API
+│   ├── bun/
+│   │   └── index.ts       # Main Bun process (server, tray, windows)
+│   ├── dashboard/
+│   │   ├── index.html     # Dashboard UI
+│   │   └── index.ts       # View-side API client
+│   └── assets/
+│       └── iconTemplate.svg  # Tray icon (SVG source)
+└── types/
+    └── electrobun.d.ts    # Type stubs for Electrobun
 ```
 
 ## How It Works
 
 ```
-[Bun Main Process (src/index.ts)]
+[Bun Main Process (src/bun/index.ts)]
   ├── Starts Warren WebSocket server (@warren/core)
-  ├── Creates system tray icon
+  ├── Creates system tray icon with menu
   └── Manages BrowserWindow (dashboard)
         └── [System WebView (dashboard/index.html)]
               └── Fetches data from http://localhost:9470
@@ -53,14 +53,12 @@ apps/desktop/
 The Warren server runs in the same Bun process as the Electrobun main process.
 The dashboard is a webview that talks to the server over HTTP.
 
-## Development Status
+## TODO
 
-- [x] Dashboard UI (devices, sessions, tunnels, settings tabs)
-- [x] Health endpoint integration
+- [ ] Convert tray icon SVG to 32x32 PNG template image (white on transparent)
 - [ ] PTY sessions list (needs `/sessions` API endpoint)
 - [ ] Paired devices list (needs pairing system v0.2)
 - [ ] QR code pairing flow (v0.2)
-- [ ] Native tray icon assets
 - [ ] Code signing + notarization (v1.0)
 
 ## Resources
