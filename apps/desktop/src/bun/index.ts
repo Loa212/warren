@@ -80,26 +80,29 @@ function refreshTray(): void {
 
 refreshTray()
 
-tray.on('tray-clicked', () => {
-  toggleDashboard()
-})
+tray.on('tray-clicked', (event) => {
+  const action = event.data?.action
 
-tray.on('tray-item-clicked', (_event) => {
-  const action = _event?.data?.action
-  if (action === 'dashboard') {
-    showDashboard()
-  } else if (action === 'quit') {
-    server.stop()
-    tray.remove()
-    process.exit(0)
-  } else if (action === 'toggle-host') {
-    hostMode = !hostMode
-    updateConfig({ hostMode })
-    refreshTray()
-    console.log(`[warren] Host mode: ${hostMode ? 'on' : 'off'}`)
-  } else if (action === 'qr') {
-    showDashboard()
-    // The dashboard will auto-trigger pairing QR display
+  switch (action) {
+    case 'dashboard':
+      showDashboard()
+      break
+    case 'quit':
+      server.stop()
+      tray.remove()
+      process.exit(0)
+      break
+    case 'toggle-host':
+      hostMode = !hostMode
+      updateConfig({ hostMode })
+      refreshTray()
+      console.log(`[warren] Host mode: ${hostMode ? 'on' : 'off'}`)
+      break
+    case 'qr':
+      showDashboard()
+      break
+    default:
+      break
   }
 })
 
@@ -128,15 +131,6 @@ function showDashboard(): void {
   dashboardWindow.on('close', () => {
     dashboardWindow = null
   })
-}
-
-function toggleDashboard(): void {
-  if (dashboardWindow) {
-    dashboardWindow.close()
-    dashboardWindow = null
-  } else {
-    showDashboard()
-  }
 }
 
 // ---------------------------------------------------------------------------
