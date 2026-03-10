@@ -94,7 +94,7 @@ See [SPEC.md](./SPEC.md) for the full architecture, security model, and roadmap.
 bun install
 
 # Full dev — Electrobun desktop app + PWA + docs
-# Desktop starts the Warren server on :9470; PWA at localhost:3000
+# Desktop starts the Warren server on :9470; PWA at localhost:3999
 bun run dev
 
 # Web-only dev — no Electrobun required

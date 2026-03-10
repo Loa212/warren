@@ -329,8 +329,8 @@ export function startServer(options: ServerOptions) {
       if (url.pathname === '/api/pair/start') {
         const identity = getOrCreateIdentity()
         const session = await startPairing(port, identity.publicKey)
-        // Use server port if staticDir present (production), else 3000 (dev with separate Vite)
-        const webPort = staticDir ? port : 3000
+        // Use server port if staticDir present (production), else 3999 (dev with separate Vite)
+        const webPort = staticDir ? port : 3999
         const hostIp = session.qrPayload.host.split(':')[0]
         const pairUrl = `http://${hostIp}:${webPort}/pair?host=${encodeURIComponent(session.qrPayload.host)}&nonce=${encodeURIComponent(session.qrPayload.nonce)}&publicKey=${encodeURIComponent(session.qrPayload.publicKey)}&version=0.2`
         const qrSvg = await generateQrSvg(pairUrl)
