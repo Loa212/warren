@@ -9,7 +9,7 @@ import { Terminal } from 'xterm'
 import type { SavedHost } from './connection'
 import { applyTerminalTheme } from './theme'
 import { uuid } from './utils'
-import { WarrenWsClient, hmacSign } from './ws-client'
+import { hmacSign, WarrenWsClient } from './ws-client'
 
 export interface SessionState {
   session: TerminalSession

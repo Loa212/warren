@@ -13,8 +13,8 @@ type ConnectionHandler = () => void
 
 function toBase64(bytes: Uint8Array): string {
   let binary = ''
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]!)
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte)
   }
   return btoa(binary)
 }
@@ -35,9 +35,13 @@ interface SharedSecretRef {
 async function encryptPayload(data: string, secret: SharedSecretRef): Promise<EncryptedPayload> {
   const iv = crypto.getRandomValues(new Uint8Array(12))
   const encoded = new TextEncoder().encode(data)
-  const key = await crypto.subtle.importKey('raw', secret.key, { name: 'AES-GCM' }, false, [
-    'encrypt',
-  ])
+  const key = await crypto.subtle.importKey(
+    'raw',
+    secret.key as BufferSource,
+    { name: 'AES-GCM' },
+    false,
+    ['encrypt'],
+  )
   const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoded)
   return {
     ciphertext: toBase64(new Uint8Array(ciphertext)),
@@ -46,20 +50,31 @@ async function encryptPayload(data: string, secret: SharedSecretRef): Promise<En
   }
 }
 
-async function decryptPayload(encrypted: EncryptedPayload, secret: SharedSecretRef): Promise<string> {
+async function decryptPayload(
+  encrypted: EncryptedPayload,
+  secret: SharedSecretRef,
+): Promise<string> {
   const iv = fromBase64(encrypted.iv)
   const ciphertext = fromBase64(encrypted.ciphertext)
-  const key = await crypto.subtle.importKey('raw', secret.key, { name: 'AES-GCM' }, false, [
-    'decrypt',
-  ])
-  const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext)
+  const key = await crypto.subtle.importKey(
+    'raw',
+    secret.key as BufferSource,
+    { name: 'AES-GCM' },
+    false,
+    ['decrypt'],
+  )
+  const plaintext = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: iv as BufferSource },
+    key,
+    ciphertext as BufferSource,
+  )
   return new TextDecoder().decode(plaintext)
 }
 
 export async function hmacSign(nonce: string, secret: SharedSecretRef): Promise<string> {
   const key = await crypto.subtle.importKey(
     'raw',
-    secret.key,
+    secret.key as BufferSource,
     { name: 'HMAC', hash: 'SHA-256' },
     false,
     ['sign'],
