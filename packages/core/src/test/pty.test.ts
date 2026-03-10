@@ -1,8 +1,8 @@
 // Basic PTY integration test
 // Run: bun test
 
-import { describe, expect, it, afterEach } from 'bun:test'
-import { createSession, writeToSession, killSession, onData, listSessions } from '../pty'
+import { afterEach, describe, expect, it } from 'bun:test'
+import { createSession, killSession, listSessions, onData, writeToSession } from '../pty'
 
 describe('PTY Manager', () => {
   const createdSessions: string[] = []

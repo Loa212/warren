@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { getHosts, addHost, updateHostLastConnected } from '@/lib/connection'
+import { addHost, getHosts, updateHostLastConnected } from '@/lib/connection'
 import { connectToHost } from '@/lib/terminal-store'
 
 export const Route = createFileRoute('/connect')({

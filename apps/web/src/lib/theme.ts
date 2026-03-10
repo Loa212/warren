@@ -1,13 +1,12 @@
 // Theme loader — applies theme to both xterm.js terminals and the app UI
 
-import type { Terminal } from 'xterm'
 import type { WarrenTheme } from '@warren/types'
-
-import tokyoNight from '../../../../packages/themes/src/defaults/tokyo-night.json'
-import rabbitHole from '../../../../packages/themes/src/defaults/rabbit-hole.json'
-import snowWarren from '../../../../packages/themes/src/defaults/snow-warren.json'
+import type { Terminal } from 'xterm'
 import catppuccinLatte from '../../../../packages/themes/src/defaults/catppuccin-latte.json'
 import catppuccinMocha from '../../../../packages/themes/src/defaults/catppuccin-mocha.json'
+import rabbitHole from '../../../../packages/themes/src/defaults/rabbit-hole.json'
+import snowWarren from '../../../../packages/themes/src/defaults/snow-warren.json'
+import tokyoNight from '../../../../packages/themes/src/defaults/tokyo-night.json'
 
 const BUILT_IN_THEMES: Record<string, WarrenTheme> = {
   'tokyo-night': tokyoNight as WarrenTheme,
@@ -34,11 +33,7 @@ export function getTheme(name: string): WarrenTheme {
 /** Parse hex to [r, g, b] */
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace('#', '')
-  return [
-    parseInt(h.slice(0, 2), 16),
-    parseInt(h.slice(2, 4), 16),
-    parseInt(h.slice(4, 6), 16),
-  ]
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]
 }
 
 /** Perceived luminance (0–1) */

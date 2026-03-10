@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.6/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -7,15 +7,28 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": ["dist/**", ".turbo/**", "node_modules/**", "*.d.ts"]
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/.turbo",
+      "!**/node_modules",
+      "!**/*.d.ts",
+      "!**/*.css",
+      "!**/route-tree.gen.ts"
+    ]
   },
-  "organizeImports": {
-    "enabled": true
-  },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "style": {
+        "noNonNullAssertion": "warn"
+      },
+      "a11y": {
+        "noStaticElementInteractions": "warn",
+        "useSemanticElements": "warn"
+      }
     }
   },
   "formatter": {

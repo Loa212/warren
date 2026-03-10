@@ -4,8 +4,8 @@
 // support. No external dependencies needed — Bun handles PTY creation, resize
 // (SIGWINCH), and raw I/O natively. POSIX only (macOS / Linux).
 
+import { randomUUID } from 'node:crypto'
 import type { TerminalSession } from '@warren/types'
-import { randomUUID } from 'crypto'
 
 interface PtyEntry {
   proc: ReturnType<typeof Bun.spawn>
@@ -78,13 +78,13 @@ export function createSession(shell?: string, cols?: number, rows?: number): Ter
 export function writeToSession(id: string, data: string): void {
   const entry = sessions.get(id)
   if (!entry) throw new Error(`Session not found: ${id}`)
-  entry.proc.terminal!.write(data)
+  entry.proc.terminal?.write(data)
 }
 
 export function resizeSession(id: string, cols: number, rows: number): void {
   const entry = sessions.get(id)
   if (!entry) throw new Error(`Session not found: ${id}`)
-  entry.proc.terminal!.resize(cols, rows)
+  entry.proc.terminal?.resize(cols, rows)
   entry.session.cols = cols
   entry.session.rows = rows
 }

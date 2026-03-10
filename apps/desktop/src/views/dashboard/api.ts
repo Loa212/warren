@@ -40,5 +40,5 @@ export const api = {
 }
 
 // Make available as a global for the inline script in index.html
-// @ts-ignore — intentional global
+// @ts-expect-error — intentional global
 window.api = api

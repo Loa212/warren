@@ -1,12 +1,12 @@
 // Terminal session state — vanilla store consumed by React via useSyncExternalStore
 
-import { Terminal } from 'xterm'
+import type { TerminalSession, WsMessage } from '@warren/types'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
-import type { TerminalSession, WsMessage } from '@warren/types'
-import { WarrenWsClient } from './ws-client'
+import { Terminal } from 'xterm'
 import { applyTerminalTheme } from './theme'
 import { uuid } from './utils'
+import { WarrenWsClient } from './ws-client'
 
 export interface SessionState {
   session: TerminalSession

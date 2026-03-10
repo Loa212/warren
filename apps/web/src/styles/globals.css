@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 *,
 *::before,
@@ -6,16 +6,17 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
+html,
+body {
   overscroll-behavior: none;
 }
 
 /* xterm needs explicit height */
 .xterm {
-  height: 100% !important;
+  height: 100%;
 }
 .xterm-viewport {
-  overflow-y: hidden !important;
+  overflow-y: hidden;
 }
 
 /* Default theme vars — overridden at runtime by applyAppTheme() */

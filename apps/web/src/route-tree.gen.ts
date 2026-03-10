@@ -9,10 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as HostIdTerminalRouteImport } from './routes/$hostId/terminal'
 import { Route as ConnectRouteImport } from './routes/connect'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as HostIdTerminalRouteImport } from './routes/$hostId/terminal'
+import { Route as SettingsRouteImport } from './routes/settings'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',

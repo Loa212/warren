@@ -40,7 +40,7 @@ export async function advertise(info: WarrenServiceInfo): Promise<void> {
   console.log(`TODO: Bonjour advertisement for node ${info.nodeId} on port ${info.port}`)
 }
 
-export async function* discover(): AsyncIterable<WarrenServiceInfo> {
+export async function discover(): Promise<WarrenServiceInfo[]> {
   // TODO(v0.2): Implement Bonjour discovery
   // Example with bonjour-service:
   //
@@ -48,15 +48,16 @@ export async function* discover(): AsyncIterable<WarrenServiceInfo> {
   //   const bonjour = new Bonjour()
   //   const browser = bonjour.find({ type: 'warren' })
   //   browser.on('up', (service) => {
-  //     yield {
+  //     results.push({
   //       version: service.txt.version,
   //       nodeId: service.txt.nodeId,
   //       hostName: service.txt.hostName,
   //       hostMode: service.txt.hostMode === 'true',
   //       port: service.port,
-  //     }
+  //     })
   //   })
 
-  console.log('TODO: Bonjour discovery — stub yields nothing')
-  // yields nothing in v0.1
+  console.log('TODO: Bonjour discovery — stub returns nothing')
+  // returns nothing in v0.1
+  return []
 }

@@ -1,8 +1,8 @@
 // Theme loader — loads themes from defaults or custom paths
 
-import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
-import { join, extname, basename } from 'path'
-import { homedir } from 'os'
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { homedir } from 'node:os'
+import { basename, extname, join } from 'node:path'
 import type { WarrenTheme } from '@warren/types'
 
 const DEFAULTS_DIR = new URL('./defaults', import.meta.url).pathname
@@ -18,11 +18,7 @@ function getCustomThemesDir(): string {
 function isValidTheme(obj: unknown): obj is WarrenTheme {
   if (typeof obj !== 'object' || obj === null) return false
   const t = obj as Record<string, unknown>
-  return (
-    typeof t['name'] === 'string' &&
-    typeof t['author'] === 'string' &&
-    typeof t['colors'] === 'object'
-  )
+  return typeof t.name === 'string' && typeof t.author === 'string' && typeof t.colors === 'object'
 }
 
 function loadFromPath(filePath: string): WarrenTheme {
@@ -65,9 +61,7 @@ export function loadTheme(nameOrPath: string): WarrenTheme {
     return loadFromPath(defaultPath)
   }
 
-  throw new Error(
-    `Theme not found: "${nameOrPath}". Run listThemes() to see available themes.`,
-  )
+  throw new Error(`Theme not found: "${nameOrPath}". Run listThemes() to see available themes.`)
 }
 
 /**
@@ -104,7 +98,10 @@ export function listThemes(): string[] {
  * Save a custom theme to ~/.warren/themes/<theme.name>.json
  */
 export function saveCustomTheme(theme: WarrenTheme): void {
-  const slug = theme.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+  const slug = theme.name
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
   const path = join(getCustomThemesDir(), `${slug}.json`)
   writeFileSync(path, JSON.stringify(theme, null, 2))
 }

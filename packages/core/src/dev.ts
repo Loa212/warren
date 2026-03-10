@@ -1,10 +1,10 @@
 // Dev entry point — starts a Warren server with a printed token
 // Usage: bun run dev (from packages/core)
 
-import { networkInterfaces } from 'os'
+import { networkInterfaces } from 'node:os'
 import qrcode from 'qrcode-terminal'
-import { startServer } from './server'
 import { loadConfig } from './config'
+import { startServer } from './server'
 
 function getLocalIp(): string {
   const nets = networkInterfaces()

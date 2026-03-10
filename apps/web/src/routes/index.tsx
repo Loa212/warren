@@ -1,8 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { getHosts, addHost, removeHost, updateHostLastConnected } from '@/lib/connection'
-import type { SavedHost } from '@/lib/connection'
-import { connectToHost, hasSessionsForHost } from '@/lib/terminal-store'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -10,9 +8,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import type { SavedHost } from '@/lib/connection'
+import { addHost, getHosts, removeHost, updateHostLastConnected } from '@/lib/connection'
+import { connectToHost, hasSessionsForHost } from '@/lib/terminal-store'
 
 export const Route = createFileRoute('/')({
   component: HostsPage,
@@ -113,7 +113,10 @@ function HostsPage() {
           hosts.map((host) => (
             <div
               key={host.id}
+              role="button"
+              tabIndex={0}
               onClick={() => handleConnect(host)}
+              onKeyDown={() => handleConnect(host)}
               className="bg-card border rounded-xl p-4 mb-3 cursor-pointer flex items-center justify-between hover:bg-secondary transition-colors"
             >
               <div>
@@ -126,6 +129,7 @@ function HostsPage() {
               <div className="flex items-center gap-3">
                 <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground" />
                 <button
+                  type="button"
                   onClick={(e) => handleRemove(e, host.id)}
                   className="text-muted-foreground hover:text-destructive text-xs px-2 py-1"
                 >
