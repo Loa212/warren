@@ -282,6 +282,17 @@ export function startServer(options: ServerOptions) {
     fetch(req, server) {
       const url = new URL(req.url)
 
+      // CORS preflight — needed for WebKit webviews fetching from views:// origin
+      if (req.method === 'OPTIONS') {
+        return new Response(null, {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+          },
+        })
+      }
+
       // WebSocket upgrade
       if (url.pathname === '/ws') {
         const token = url.searchParams.get('token')
@@ -324,7 +335,10 @@ export function startServer(options: ServerOptions) {
           sessions: ptyManager.listSessions().length,
         })
         return new Response(body, {
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
         })
       }
 
