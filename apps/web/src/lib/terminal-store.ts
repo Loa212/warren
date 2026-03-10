@@ -1,12 +1,15 @@
 // Terminal session state — vanilla store consumed by React via useSyncExternalStore
+//
+// v0.2: Supports HMAC challenge-response auth with encrypted transport.
 
 import type { TerminalSession, WsMessage } from '@warren/types'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 import { Terminal } from 'xterm'
+import type { SavedHost } from './connection'
 import { applyTerminalTheme } from './theme'
 import { uuid } from './utils'
-import { WarrenWsClient } from './ws-client'
+import { hmacSign, WarrenWsClient } from './ws-client'
 
 export interface SessionState {
   session: TerminalSession
@@ -43,6 +46,19 @@ function getDeviceId(): string {
   return id
 }
 
+// ---------------------------------------------------------------------------
+// Helpers — base64 <-> Uint8Array (browser-compatible)
+// ---------------------------------------------------------------------------
+
+function fromBase64(b64: string): Uint8Array {
+  const binary = atob(b64)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i)
+  }
+  return bytes
+}
+
 // ─── Subscriptions for useSyncExternalStore ──────────────────────────────────
 
 export function subscribe(listener: Listener): () => void {
@@ -66,11 +82,24 @@ export function hasSessionsForHost(host: string): boolean {
   return false
 }
 
-export function connectToHost(host: string, token: string): void {
+export function connectToHost(host: string, token: string, savedHost?: SavedHost): void {
   if (wsClients.has(host)) return
 
-  const wsClient = new WarrenWsClient(`ws://${host}/ws?token=${encodeURIComponent(token)}`)
+  // Determine connection URL based on auth version
+  let wsUrl: string
+  if (savedHost?.authVersion === 'v2' && savedHost.sharedSecret) {
+    wsUrl = `ws://${host}/ws?deviceId=${encodeURIComponent(getDeviceId())}`
+  } else {
+    wsUrl = `ws://${host}/ws?token=${encodeURIComponent(token)}`
+  }
+
+  const wsClient = new WarrenWsClient(wsUrl)
   wsClients.set(host, wsClient)
+
+  // If v0.2, set the shared secret on the client for encrypted transport
+  if (savedHost?.authVersion === 'v2' && savedHost.sharedSecret) {
+    wsClient.setSharedSecret(fromBase64(savedHost.sharedSecret))
+  }
 
   wsClient.onOpen(() => {
     console.log(`[warren] connected to ${host}`)
@@ -82,7 +111,7 @@ export function connectToHost(host: string, token: string): void {
   })
 
   wsClient.onMessage((msg: WsMessage) => {
-    handleMessage(host, token, wsClient, msg)
+    handleMessage(host, token, wsClient, msg, savedHost)
   })
 
   wsClient.connect()
@@ -133,10 +162,20 @@ function handleMessage(
   token: string,
   wsClient: WarrenWsClient,
   msg: WsMessage,
+  savedHost?: SavedHost,
 ): void {
   switch (msg.type) {
     case 'auth:challenge':
-      wsClient.send({ type: 'auth:response', signature: token, deviceId: getDeviceId() })
+      if (savedHost?.authVersion === 'v2' && savedHost.sharedSecret) {
+        // v0.2: Sign challenge nonce with HMAC using shared secret
+        const secretKey = fromBase64(savedHost.sharedSecret)
+        hmacSign(msg.nonce, { key: secretKey }).then((sig) => {
+          wsClient.send({ type: 'auth:response', signature: sig, deviceId: getDeviceId() })
+        })
+      } else {
+        // v0.1: Send token as signature
+        wsClient.send({ type: 'auth:response', signature: token, deviceId: getDeviceId() })
+      }
       break
 
     case 'auth:success':
