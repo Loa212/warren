@@ -1,8 +1,8 @@
 // Config management — reads/writes ~/.warren/config.json
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
-import { homedir } from 'os'
-import { join } from 'path'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { homedir } from 'node:os'
+import { join } from 'node:path'
 import type { WarrenConfig } from '@warren/types'
 
 const CONFIG_DIR_NAME = '.warren'

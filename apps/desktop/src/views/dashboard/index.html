@@ -340,7 +340,7 @@
         <section id="tab-devices" class="tab-panel active">
           <div class="section-header">
             <h2>Devices</h2>
-            <button class="btn btn-primary" onclick="pairNewDevice()">+ Pair Device</button>
+            <button type="button" class="btn btn-primary" onclick="pairNewDevice()">+ Pair Device</button>
           </div>
           <div id="devices-list">
             <div class="empty-state">
@@ -357,7 +357,7 @@
         <section id="tab-sessions" class="tab-panel">
           <div class="section-header">
             <h2>Active Sessions</h2>
-            <button class="btn btn-ghost" onclick="refreshSessions()">↻ Refresh</button>
+            <button type="button" class="btn btn-ghost" onclick="refreshSessions()">↻ Refresh</button>
           </div>
           <div id="sessions-list">
             <div class="empty-state">
@@ -377,14 +377,14 @@
             <div class="card-subtitle" style="margin-bottom: 12px">
               Expose your Warren host to the internet via Cloudflare's free tunnel service.
             </div>
-            <button class="btn btn-primary">Set Up Cloudflare Tunnel</button>
+            <button type="button" class="btn btn-primary">Set Up Cloudflare Tunnel</button>
           </div>
           <div class="card">
             <div class="card-title">Tailscale</div>
             <div class="card-subtitle" style="margin-bottom: 12px">
               Join a Tailscale mesh network — Warren is auto-discovered on your tailnet.
             </div>
-            <button class="btn btn-primary">Set Up Tailscale</button>
+            <button type="button" class="btn btn-primary">Set Up Tailscale</button>
           </div>
           <p
             style="
@@ -474,8 +474,8 @@
         item.addEventListener('click', () => {
           const tab = item.dataset.tab
 
-          document.querySelectorAll('.nav-item').forEach((n) => n.classList.remove('active'))
-          document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'))
+          document.querySelectorAll('.nav-item').forEach((n) => { n.classList.remove('active') })
+          document.querySelectorAll('.tab-panel').forEach((p) => { p.classList.remove('active') })
 
           item.classList.add('active')
           document.getElementById(`tab-${tab}`).classList.add('active')
@@ -507,7 +507,7 @@
             </div>
           `
         } catch (e) {
-          showError('Cannot connect to Warren server: ' + e.message)
+          showError(`Cannot connect to Warren server: ${e.message}`)
         }
       }
 
@@ -521,12 +521,12 @@
         `
       }
 
-      function pairNewDevice() {
+      function _pairNewDevice() {
         // TODO(v0.2): Trigger QR code display via IPC to main process
         alert('QR pairing coming in v0.2')
       }
 
-      function saveSetting(key, value) {
+      function _saveSetting(key, value) {
         // TODO: Save via IPC to main process → config.ts
         console.log('Setting:', key, '=', value)
       }

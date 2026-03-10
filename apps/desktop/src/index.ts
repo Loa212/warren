@@ -5,8 +5,8 @@
 // Electrobun APIs verified against v1.15.1.
 // Docs: https://blackboard.sh/electrobun/docs/
 
+import { generateToken, loadConfig, startServer } from '@warren/core'
 import { BrowserWindow, Tray } from 'electrobun'
-import { startServer, loadConfig, updateConfig, generateToken } from '@warren/core'
 
 // ---------------------------------------------------------------------------
 // Config & Server
@@ -31,7 +31,7 @@ console.log(`[warren] Token: ${token}`)
 // Tray
 // ---------------------------------------------------------------------------
 
-let hostMode = config.hostMode
+const _hostMode = config.hostMode
 
 // TrayOptions: { title?, image?, template?, width?, height? }
 // TODO: Create tray icon at src/assets/tray-icon.png (16x16 template image)

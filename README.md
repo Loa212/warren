@@ -93,7 +93,11 @@ See [SPEC.md](./SPEC.md) for the full architecture, security model, and roadmap.
 # Prerequisites: Bun 1.1+
 bun install
 
-# Run the PWA dev server
+# Run the core WebSocket server (PTY host)
+# Prints a token + QR code — scan from your phone or paste into the PWA
+cd packages/core && bun run src/dev.ts
+
+# Run the PWA dev server (separate terminal)
 bun run dev --filter=@warren/web
 
 # Run the docs dev server

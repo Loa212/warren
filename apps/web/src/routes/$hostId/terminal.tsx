@@ -1,16 +1,16 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useSyncExternalStore, useState } from 'react'
-import {
-  subscribe,
-  getSnapshot,
-  activateSession,
-  killSession,
-  createSession,
-  sendData,
-} from '@/lib/terminal-store'
+import { useState, useSyncExternalStore } from 'react'
+import { DraggableFab } from '@/components/draggable-fab'
 import { TerminalPane } from '@/components/terminal-pane'
 import { Toolbar } from '@/components/toolbar'
-import { DraggableFab } from '@/components/draggable-fab'
+import {
+  activateSession,
+  createSession,
+  getSnapshot,
+  killSession,
+  sendData,
+  subscribe,
+} from '@/lib/terminal-store'
 
 export const Route = createFileRoute('/$hostId/terminal')({
   component: TerminalPage,
@@ -32,15 +32,21 @@ function TerminalPage() {
           return (
             <div
               key={id}
+              role="tab"
+              tabIndex={0}
               onClick={() => activateSession(id)}
+              onKeyDown={() => activateSession(id)}
               className={`shrink-0 px-4 py-2.5 text-[13px] cursor-pointer border-b-2 whitespace-nowrap flex items-center gap-2 min-w-[80px] justify-center transition-colors ${
                 id === activeSessionId
                   ? 'text-primary border-primary'
                   : 'text-muted-foreground border-transparent'
               }`}
             >
-              <span>{hostShort} › {shellName}</span>
-              <span
+              <span>
+                {hostShort} › {shellName}
+              </span>
+              <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation()
                   killSession(id)
@@ -48,12 +54,13 @@ function TerminalPage() {
                 className="opacity-50 text-[15px] leading-none hover:opacity-100"
               >
                 ×
-              </span>
+              </button>
             </div>
           )
         })}
 
         <button
+          type="button"
           onClick={() => createSession()}
           className="shrink-0 px-3.5 py-2.5 text-muted-foreground text-lg hover:text-primary transition-colors"
           title="New session"
@@ -73,11 +80,7 @@ function TerminalPage() {
           </div>
         ) : (
           sessionList.map(([id, state]) => (
-            <TerminalPane
-              key={id}
-              sessionState={state}
-              isActive={id === activeSessionId}
-            />
+            <TerminalPane key={id} sessionState={state} isActive={id === activeSessionId} />
           ))
         )}
       </div>
@@ -111,7 +114,12 @@ function TerminalPage() {
 
       {/* Dismiss menu when tapping elsewhere */}
       {menuOpen && (
-        <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+        // biome-ignore lint/a11y/noStaticElementInteractions: dismiss overlay
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setMenuOpen(false)}
+          onKeyDown={() => setMenuOpen(false)}
+        />
       )}
     </div>
   )

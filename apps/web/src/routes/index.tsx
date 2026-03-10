@@ -1,18 +1,12 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { getHosts, addHost, removeHost, updateHostLastConnected } from '@/lib/connection'
-import type { SavedHost } from '@/lib/connection'
-import { connectToHost, hasSessionsForHost } from '@/lib/terminal-store'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import type { SavedHost } from '@/lib/connection'
+import { addHost, getHosts, removeHost, updateHostLastConnected } from '@/lib/connection'
+import { connectToHost, hasSessionsForHost } from '@/lib/terminal-store'
 
 export const Route = createFileRoute('/')({
   component: HostsPage,
@@ -58,17 +52,17 @@ function HostsPage() {
       {/* Header */}
       <header className="flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+16px)] pb-4 border-b">
         <h1 className="text-lg font-bold tracking-widest text-primary">Warren</h1>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
             <Button variant="secondary" size="icon" className="h-9 w-9 text-xl">
               +
             </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Add Host</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 pt-2">
+          </SheetTrigger>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Add Host</SheetTitle>
+            </SheetHeader>
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="host-address">Host address</Label>
                 <Input
@@ -97,8 +91,8 @@ function HostsPage() {
                 </Button>
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
+          </SheetContent>
+        </Sheet>
       </header>
 
       {/* Host list */}
@@ -113,7 +107,10 @@ function HostsPage() {
           hosts.map((host) => (
             <div
               key={host.id}
+              role="button"
+              tabIndex={0}
               onClick={() => handleConnect(host)}
+              onKeyDown={() => handleConnect(host)}
               className="bg-card border rounded-xl p-4 mb-3 cursor-pointer flex items-center justify-between hover:bg-secondary transition-colors"
             >
               <div>
@@ -126,6 +123,7 @@ function HostsPage() {
               <div className="flex items-center gap-3">
                 <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground" />
                 <button
+                  type="button"
                   onClick={(e) => handleRemove(e, host.id)}
                   className="text-muted-foreground hover:text-destructive text-xs px-2 py-1"
                 >

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, type ReactNode } from 'react'
+import { type ReactNode, useCallback, useRef, useState } from 'react'
 
 interface Props {
   children: ReactNode
@@ -49,16 +49,12 @@ export function DraggableFab({ children, menuContent, menuOpen, onToggleMenu, cl
   }, [onToggleMenu])
 
   return (
-    <div
-      className="fixed z-50"
-      style={{ right: pos.x, bottom: pos.y }}
-    >
+    <div className="fixed z-50" style={{ right: pos.x, bottom: pos.y }}>
       {menuOpen && menuContent && (
-        <div className="mb-2 flex flex-col gap-1.5 items-end">
-          {menuContent}
-        </div>
+        <div className="mb-2 flex flex-col gap-1.5 items-end">{menuContent}</div>
       )}
       <button
+        type="button"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}

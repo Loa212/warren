@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import 'xterm/css/xterm.css'
 import type { SessionState } from '@/lib/terminal-store'
 import { resizeActiveSession } from '@/lib/terminal-store'
@@ -30,7 +30,7 @@ export function TerminalPane({ sessionState, isActive }: Props) {
     return () => {
       mounted.current = false
     }
-  }, [sessionState])
+  }, [sessionState, isActive])
 
   // Focus + fit when this pane becomes active
   useEffect(() => {
@@ -69,6 +69,7 @@ export function TerminalPane({ sessionState, isActive }: Props) {
     <div
       ref={containerRef}
       onClick={handleClick}
+      onKeyDown={handleClick}
       className="absolute inset-0"
       style={{ display: isActive ? 'block' : 'none' }}
     />

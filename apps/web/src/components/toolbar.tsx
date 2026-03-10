@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useCallback, useState } from 'react'
 
 interface Props {
   onSend: (data: string) => void
@@ -72,6 +72,7 @@ export function Toolbar({ onSend }: Props) {
 
         return (
           <button
+            type="button"
             key={action}
             onClick={() => handleAction(action)}
             onTouchEnd={(e) => e.preventDefault()}
@@ -81,7 +82,6 @@ export function Toolbar({ onSend }: Props) {
           </button>
         )
       })}
-
     </div>
   )
 }

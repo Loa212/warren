@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { listAvailableThemes, applyThemeEverywhere, getTheme } from '@/lib/theme'
 import { getAllTerminals } from '@/lib/terminal-store'
+import { applyThemeEverywhere, getTheme, listAvailableThemes } from '@/lib/theme'
 
 export const Route = createFileRoute('/settings')({
   component: SettingsPage,
@@ -42,9 +42,7 @@ function SettingsPage() {
           </div>
         </section>
 
-        <div className="text-center text-xs text-muted-foreground/40 pt-4">
-          Warren v0.1.0 · MIT
-        </div>
+        <div className="text-center text-xs text-muted-foreground/40 pt-4">Warren v0.1.0 · MIT</div>
       </div>
 
       <footer className="flex border-t pb-[env(safe-area-inset-bottom)]">
@@ -78,6 +76,7 @@ function ThemeCard({
 
   return (
     <button
+      type="button"
       onClick={() => onSelect(name)}
       className="relative rounded-xl overflow-hidden text-left transition-all"
       style={{
@@ -103,7 +102,7 @@ function ThemeCard({
             <span style={{ color: accent }}>~</span>
             <span style={{ color: fg }}> $ ls</span>
           </div>
-          <div style={{ color: fg, opacity: 0.65 }}>Documents  Downloads</div>
+          <div style={{ color: fg, opacity: 0.65 }}>Documents Downloads</div>
           <div>
             <span style={{ color: accent }}>~</span>
             <span style={{ color: fg }}> $ </span>

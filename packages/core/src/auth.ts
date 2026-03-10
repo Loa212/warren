@@ -7,8 +7,6 @@
 //   - Derive shared secret, store in device trust DB (SQLite)
 //   - All subsequent WsMessages encrypted with AES-GCM using shared secret
 
-import { randomBytes, createHmac } from 'crypto'
-
 // ---------------------------------------------------------------------------
 // v0.1: Token-based auth (working)
 // ---------------------------------------------------------------------------

@@ -8,13 +8,13 @@
 // Auth v0.1: static token comparison.
 // TODO(v0.2): Replace with X25519 challenge-response (see auth.ts)
 
-import { join } from 'path'
-import { existsSync } from 'fs'
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
+import type { WarrenConfig, WsMessage } from '@warren/types'
 import type { ServerWebSocket } from 'bun'
-import type { WsMessage, TerminalSession, WarrenConfig } from '@warren/types'
-import * as ptyManager from './pty'
 import { validateToken } from './auth'
 import { loadConfig } from './config'
+import * as ptyManager from './pty'
 
 const VERSION = '0.1.0'
 const START_TIME = Date.now()
@@ -127,7 +127,7 @@ export function startServer(options: ServerOptions) {
       // WebSocket upgrade
       if (url.pathname === '/ws') {
         const token = url.searchParams.get('token') ?? ''
-        const nonce = crypto.randomUUID()
+        const _nonce = crypto.randomUUID()
 
         const upgraded = server.upgrade(req, {
           data: {
