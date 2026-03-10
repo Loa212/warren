@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+  <!-- macOS template icon: white on transparent, system inverts for dark/light -->
+  <g transform="translate(8, 8.5)" fill="#ffffff">
+    <!-- Body -->
+    <ellipse cx="0" cy="2" rx="3.2" ry="4" />
+    <!-- Head -->
+    <ellipse cx="0" cy="-2.5" rx="2.8" ry="2.6" />
+    <!-- Left ear -->
+    <ellipse cx="-1.4" cy="-6.5" rx="0.8" ry="2.5" />
+    <!-- Right ear -->
+    <ellipse cx="1.4" cy="-6.5" rx="0.8" ry="2.5" />
+  </g>
+</svg>
