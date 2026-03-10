@@ -5,12 +5,19 @@
 // TXT records: version, nodeId, hostName, hostMode
 
 import type { WarrenServiceInfo } from '@warren/types'
-import Bonjour, { type Service } from 'bonjour-service'
+import BonjourModule, { type Service } from 'bonjour-service'
 
-let bonjourInstance: InstanceType<typeof Bonjour> | null = null
+// bonjour-service is CJS — handle both ESM default and direct export
+const Bonjour =
+  typeof BonjourModule === 'function'
+    ? BonjourModule
+    : (BonjourModule as { default: typeof BonjourModule }).default
+
+type BonjourInstance = InstanceType<typeof Bonjour>
+let bonjourInstance: BonjourInstance | null = null
 let publishedService: Service | null = null
 
-function getBonjourInstance(): InstanceType<typeof Bonjour> {
+function getBonjourInstance(): BonjourInstance {
   if (!bonjourInstance) {
     bonjourInstance = new Bonjour()
   }
