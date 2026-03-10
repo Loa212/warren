@@ -14,6 +14,7 @@ import type { WarrenConfig, WsMessage } from '@warren/types'
 import type { ServerWebSocket } from 'bun'
 import { validateToken } from './auth'
 import { loadConfig } from './config'
+import { getDevice, listDevices, revokeDevice, updateLastSeen } from './devices'
 import * as ptyManager from './pty'
 
 const VERSION = '0.1.0'
@@ -23,6 +24,33 @@ interface WsData {
   deviceId: string
   authenticated: boolean
   token: string
+}
+
+// Track active WebSocket connections per device for forced disconnection
+const activeConnections = new Map<string, Set<ServerWebSocket<WsData>>>()
+
+function trackConnection(deviceId: string, ws: ServerWebSocket<WsData>): void {
+  if (!activeConnections.has(deviceId)) {
+    activeConnections.set(deviceId, new Set())
+  }
+  activeConnections.get(deviceId)?.add(ws)
+}
+
+function untrackConnection(ws: ServerWebSocket<WsData>): void {
+  const conns = activeConnections.get(ws.data.deviceId)
+  if (!conns) return
+  conns.delete(ws)
+  if (conns.size === 0) activeConnections.delete(ws.data.deviceId)
+}
+
+function disconnectDevice(deviceId: string): void {
+  const conns = activeConnections.get(deviceId)
+  if (!conns) return
+  for (const ws of conns) {
+    send(ws, { type: 'auth:failure', reason: 'Device revoked' })
+    ws.close()
+  }
+  activeConnections.delete(deviceId)
 }
 
 export interface ServerOptions {
@@ -48,8 +76,18 @@ function handleMessage(ws: ServerWebSocket<WsData>, raw: string): void {
   if (!ws.data.authenticated) {
     if (msg.type === 'auth:response') {
       if (validateToken(msg.signature, ws.data.token)) {
+        // Reject revoked devices
+        const device = getDevice(msg.deviceId)
+        if (device && device.permission === 'revoked') {
+          send(ws, { type: 'auth:failure', reason: 'Device has been revoked' })
+          ws.close()
+          return
+        }
+
         ws.data.authenticated = true
         ws.data.deviceId = msg.deviceId
+        trackConnection(msg.deviceId, ws)
+        updateLastSeen(msg.deviceId)
         send(ws, { type: 'auth:success' })
       } else {
         send(ws, { type: 'auth:failure', reason: 'Invalid token' })
@@ -159,6 +197,33 @@ export function startServer(options: ServerOptions) {
         })
       }
 
+      // Device API endpoints
+      // TODO(v0.2): authenticate HTTP API endpoints
+      if (url.pathname === '/api/devices' && req.method === 'GET') {
+        return Response.json(listDevices())
+      }
+
+      if (
+        url.pathname.startsWith('/api/devices/') &&
+        url.pathname.endsWith('/revoke') &&
+        req.method === 'POST'
+      ) {
+        const id = url.pathname.split('/')[3]
+        if (!id) return new Response('Bad request', { status: 400 })
+        const device = revokeDevice(id)
+        if (!device) return Response.json({ error: 'Device not found' }, { status: 404 })
+        disconnectDevice(id)
+        return Response.json(device)
+      }
+
+      if (url.pathname.startsWith('/api/devices/') && req.method === 'GET') {
+        const id = url.pathname.split('/')[3]
+        if (!id) return new Response('Bad request', { status: 400 })
+        const device = getDevice(id)
+        if (!device) return Response.json({ error: 'Device not found' }, { status: 404 })
+        return Response.json(device)
+      }
+
       // Static file serving (PWA in production)
       if (staticDir) {
         let filePath = join(staticDir, url.pathname)
@@ -185,6 +250,8 @@ export function startServer(options: ServerOptions) {
       },
 
       close(ws) {
+        untrackConnection(ws)
+
         // Kill all sessions owned by this device
         const sessions = ptyManager.listSessions().filter((s) => s.deviceId === ws.data.deviceId)
         for (const session of sessions) {

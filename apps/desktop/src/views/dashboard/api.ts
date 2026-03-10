@@ -32,10 +32,16 @@ export const api = {
     return request<HealthResponse>('/health')
   },
 
+  devices(): Promise<unknown[]> {
+    return request<unknown[]>('/api/devices')
+  },
+
+  revokeDevice(id: string): Promise<unknown> {
+    return request<unknown>(`/api/devices/${id}/revoke`, { method: 'POST' })
+  },
+
   // TODO: Add more endpoints as the server exposes them:
   //   sessions(): Promise<TerminalSession[]>
-  //   devices(): Promise<PairedDevice[]>
-  //   revokeDevice(id: string): Promise<void>
   //   killSession(id: string): Promise<void>
 }
 

@@ -2,6 +2,7 @@
 
 export * from './auth'
 export * from './config'
+export * from './devices'
 export * from './discovery'
 export * from './pty'
 export * from './server'
