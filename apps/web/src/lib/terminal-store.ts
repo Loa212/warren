@@ -96,7 +96,9 @@ export function hasSessionsForHost(host: string): boolean {
 }
 
 export function connectToHost(host: string, token: string, savedHost?: SavedHost): void {
-  if (wsClients.has(host)) return
+  const existing = wsClients.get(host)
+  if (existing?.isConnected) return // already live — nothing to do
+  if (existing) wsClients.delete(host) // stale disconnected client — evict and reconnect
 
   // Determine connection URL based on auth version
   let wsUrl: string
