@@ -523,7 +523,7 @@
 
       function _pairNewDevice() {
         // TODO(v0.2): Trigger QR code display via IPC to main process
-        alert('QR pairing coming in v0.2')
+        showInfo('QR pairing coming in v0.2 — run `bun run dev:web` to test the pairing flow')
       }
 
       function _saveSetting(key, value) {
@@ -543,7 +543,18 @@
       function showError(msg) {
         const banner = document.getElementById('error-banner')
         banner.textContent = msg
+        banner.style.borderColor = 'var(--red)'
+        banner.style.color = 'var(--red)'
         banner.classList.add('show')
+      }
+
+      function showInfo(msg) {
+        const banner = document.getElementById('error-banner')
+        banner.textContent = msg
+        banner.style.borderColor = 'var(--accent)'
+        banner.style.color = 'var(--accent)'
+        banner.classList.add('show')
+        setTimeout(() => banner.classList.remove('show'), 4000)
       }
     </script>
   </body>
