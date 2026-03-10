@@ -160,7 +160,9 @@ async function handleKeypairAuth(ws: ServerWebSocket<WsData>, msg: WsMessage): P
     return
   }
 
-  console.log(`[warren] handleKeypairAuth: device found, sharedSecret length=${device.sharedSecret.length}`)
+  console.log(
+    `[warren] handleKeypairAuth: device found, sharedSecret length=${device.sharedSecret.length}`,
+  )
 
   if (device.permission === 'revoked') {
     sendPlain(ws, { type: 'auth:failure', reason: 'Device access revoked' })

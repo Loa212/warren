@@ -90,7 +90,9 @@ function TerminalPage() {
               <div className="w-full max-w-sm bg-black/40 rounded-lg p-3 font-mono text-[10px] text-muted-foreground space-y-0.5">
                 {debugLog.map((line, i) => (
                   // biome-ignore lint/suspicious/noArrayIndexKey: debug log is ephemeral
-                  <div key={i} className={line.includes('failure') ? 'text-destructive' : ''}>{line}</div>
+                  <div key={i} className={line.includes('failure') ? 'text-destructive' : ''}>
+                    {line}
+                  </div>
                 ))}
               </div>
             )}
