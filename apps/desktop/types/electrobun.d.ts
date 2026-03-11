@@ -22,13 +22,13 @@ declare module 'electrobun/bun' {
     action?: string
   }
 
+  export interface TrayClickedEvent {
+    data?: { id: number; action: string; data?: unknown }
+  }
+
   export class Tray {
     constructor(options?: TrayOptions)
-    on(event: 'tray-clicked', handler: () => void): this
-    on(
-      event: 'tray-item-clicked',
-      handler: (event: { data?: { action?: string } }) => void,
-    ): this
+    on(event: 'tray-clicked', handler: (event: TrayClickedEvent) => void): this
     setTitle(title: string): void
     setImage(image: string): void
     setMenu(items: TrayMenuItem[]): void

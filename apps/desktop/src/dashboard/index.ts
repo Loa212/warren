@@ -68,6 +68,10 @@ const api = {
     return request<DeviceInfo[]>('/api/devices')
   },
 
+  revokeDevice(id: string): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>(`/api/devices/${id}/revoke`, { method: 'PATCH' })
+  },
+
   deleteDevice(id: string): Promise<{ ok: boolean }> {
     return request<{ ok: boolean }>(`/api/devices/${id}`, { method: 'DELETE' })
   },
