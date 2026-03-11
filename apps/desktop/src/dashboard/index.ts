@@ -51,6 +51,22 @@ export interface DeviceInfo {
   permission: 'full' | 'revoked'
 }
 
+export interface DiscoveredNode {
+  version: string
+  nodeId: string
+  hostName: string
+  hostMode: boolean
+  port: number
+}
+
+export interface ConfigResponse {
+  shell: string
+  port: number
+  hostMode: boolean
+  theme: string
+  logging: boolean
+}
+
 const api = {
   health(): Promise<HealthResponse> {
     return request<HealthResponse>('/health')
@@ -78,6 +94,21 @@ const api = {
 
   killSession(id: string): Promise<{ ok: boolean }> {
     return request<{ ok: boolean }>(`/api/sessions/${id}`, { method: 'DELETE' })
+  },
+
+  discover(): Promise<DiscoveredNode[]> {
+    return request<DiscoveredNode[]>('/api/discover')
+  },
+
+  getConfig(): Promise<ConfigResponse> {
+    return request<ConfigResponse>('/api/config')
+  },
+
+  updateConfig(partial: Partial<ConfigResponse>): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>('/api/config', {
+      method: 'PATCH',
+      body: JSON.stringify(partial),
+    })
   },
 }
 
