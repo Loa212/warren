@@ -3,28 +3,38 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Warren Dashboard</title>
+    <title>Warren</title>
     <style>
-      * {
+      /* ── Reset & tokens ───────────────────────────── */
+      *,
+      *::before,
+      *::after {
         box-sizing: border-box;
         margin: 0;
         padding: 0;
       }
 
       :root {
-        --bg: #12111a;
-        --bg-secondary: #1e1b2e;
-        --bg-tertiary: #2d2545;
-        --text: #d4c8f0;
-        --text-muted: #8b7fb8;
+        --bg: #0c0b15;
+        --bg-sidebar: #090812;
+        --bg-card: #131121;
+        --bg-card-hover: #18162a;
+        --bg-input: #0f0e1c;
+        --text: #ddd6f3;
+        --text-dim: #9890be;
+        --text-muted: #524e6e;
         --accent: #b794f4;
-        --accent-dim: #6d5da8;
-        --border: #2d2545;
-        --green: #a8d8a8;
+        --accent-dim: #7a5fc7;
+        --accent-glow: rgba(183, 148, 244, 0.1);
+        --border: #1c1a2c;
+        --border-focus: #4a3f7a;
+        --green: #7ec8a4;
         --red: #f28b82;
         --yellow: #f6c177;
-        --sidebar-width: 200px;
-        --title-bar-height: 36px;
+        --cyan: #7dd3fc;
+        --sidebar-w: 192px;
+        --titlebar-h: 40px;
+        --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
       }
 
       html,
@@ -32,219 +42,643 @@
         height: 100%;
         background: var(--bg);
         color: var(--text);
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
         font-size: 13px;
         overflow: hidden;
         user-select: none;
+        -webkit-font-smoothing: antialiased;
       }
 
-      /* Title bar drag area */
-      .title-bar {
-        height: var(--title-bar-height);
-        background: var(--bg);
+      /* ── Layout shell ─────────────────────────────── */
+      .app {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      /* Title bar */
+      .titlebar {
+        height: var(--titlebar-h);
+        background: var(--bg-sidebar);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: stretch;
+        flex-shrink: 0;
         -webkit-app-region: drag;
+      }
+
+      .titlebar-brand {
+        width: var(--sidebar-w);
+        padding: 0 16px 0 80px;
         display: flex;
         align-items: center;
-        padding: 0 20px 0 80px;
-        border-bottom: 1px solid var(--border);
+        gap: 8px;
+        border-right: 1px solid var(--border);
         flex-shrink: 0;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        color: var(--text-dim);
+        font-family: var(--font-mono);
       }
 
-      .title-bar h1 {
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--text-muted);
-        letter-spacing: 0.05em;
-      }
-
-      .app-layout {
+      .titlebar-section {
+        flex: 1;
+        padding: 0 20px;
         display: flex;
-        height: calc(100% - var(--title-bar-height));
+        align-items: center;
+        font-size: 12px;
+        color: var(--text-muted);
+        font-weight: 500;
       }
 
-      /* Sidebar */
+      /* Body */
+      .body {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+      }
+
+      /* ── Sidebar ──────────────────────────────────── */
       .sidebar {
-        width: var(--sidebar-width);
-        background: var(--bg);
+        width: var(--sidebar-w);
+        background: var(--bg-sidebar);
         border-right: 1px solid var(--border);
         display: flex;
         flex-direction: column;
-        padding: 8px 0;
         flex-shrink: 0;
+      }
+
+      .nav {
+        flex: 1;
+        padding: 8px 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
       }
 
       .nav-item {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 8px 16px;
-        cursor: pointer;
+        gap: 9px;
+        padding: 7px 10px;
         border-radius: 6px;
-        margin: 0 8px;
+        cursor: pointer;
         color: var(--text-muted);
-        font-size: 13px;
-        transition: background 0.1s, color 0.1s;
+        font-size: 12.5px;
+        font-weight: 500;
+        transition: background 0.12s, color 0.12s;
         -webkit-app-region: no-drag;
+        position: relative;
       }
 
       .nav-item:hover {
-        background: var(--bg-secondary);
-        color: var(--text);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-dim);
       }
 
       .nav-item.active {
-        background: var(--bg-tertiary);
+        background: var(--accent-glow);
         color: var(--accent);
       }
 
-      .nav-item .icon {
-        font-size: 15px;
-        width: 18px;
+      .nav-item.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 2px;
+        height: 16px;
+        background: var(--accent);
+        border-radius: 0 2px 2px 0;
+      }
+
+      .nav-icon {
+        width: 16px;
         text-align: center;
+        font-size: 13px;
+        flex-shrink: 0;
+        opacity: 0.65;
       }
 
-      /* Main content */
-      .main-content {
-        flex: 1;
-        overflow-y: auto;
-        padding: 24px;
+      .nav-item.active .nav-icon {
+        opacity: 1;
       }
 
-      .tab-panel {
+      .nav-badge {
+        margin-left: auto;
+        background: var(--accent-dim);
+        color: #fff;
+        font-size: 9.5px;
+        font-weight: 700;
+        padding: 1px 5px;
+        border-radius: 10px;
+        font-family: var(--font-mono);
         display: none;
       }
 
-      .tab-panel.active {
+      .sidebar-footer {
+        padding: 12px 14px;
+        border-top: 1px solid var(--border);
+      }
+
+      .server-status {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 3px;
+      }
+
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--text-muted);
+        flex-shrink: 0;
+        transition: background 0.3s;
+      }
+
+      .status-dot.online {
+        background: var(--green);
+        box-shadow: 0 0 0 2px rgba(126, 200, 164, 0.2);
+        animation: dotPulse 2.5s ease-in-out infinite;
+      }
+
+      @keyframes dotPulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 2px rgba(126, 200, 164, 0.2);
+        }
+        50% {
+          box-shadow: 0 0 0 5px rgba(126, 200, 164, 0.05);
+        }
+      }
+
+      .server-label {
+        font-size: 11.5px;
+        color: var(--text-dim);
+        font-weight: 500;
+      }
+
+      .server-meta {
+        font-size: 10.5px;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        padding-left: 13px;
+        line-height: 1.5;
+      }
+
+      /* ── Main pane ────────────────────────────────── */
+      .main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: var(--bg);
+        /* subtle dot grid */
+        background-image: radial-gradient(circle, rgba(183, 148, 244, 0.04) 1px, transparent 1px);
+        background-size: 22px 22px;
+      }
+
+      /* notification strip */
+      .notif {
+        margin: 12px 24px 0;
+        padding: 9px 14px;
+        border-radius: 6px;
+        font-size: 12px;
+        display: none;
+        flex-shrink: 0;
+        border: 1px solid;
+        animation: fadeIn 0.15s ease;
+      }
+
+      .notif.show {
         display: block;
       }
 
-      /* Section header */
-      .section-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 20px;
+      .notif.error {
+        background: rgba(242, 139, 130, 0.08);
+        border-color: rgba(242, 139, 130, 0.35);
+        color: var(--red);
       }
 
-      .section-header h2 {
-        font-size: 18px;
+      .notif.info {
+        background: rgba(183, 148, 244, 0.08);
+        border-color: rgba(183, 148, 244, 0.3);
+        color: var(--accent);
+      }
+
+      .notif.success {
+        background: rgba(126, 200, 164, 0.08);
+        border-color: rgba(126, 200, 164, 0.3);
+        color: var(--green);
+      }
+
+      .scroll {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
+        scrollbar-width: thin;
+        scrollbar-color: var(--border) transparent;
+      }
+
+      .scroll::-webkit-scrollbar {
+        width: 5px;
+      }
+      .scroll::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .scroll::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 3px;
+      }
+
+      /* ── Tabs ─────────────────────────────────────── */
+      .tab {
+        display: none;
+      }
+
+      .tab.active {
+        display: block;
+        animation: fadeIn 0.14s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(3px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* ── Section header ───────────────────────────── */
+      .sec-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 18px;
+        gap: 12px;
+      }
+
+      .sec-title {
+        font-size: 16px;
         font-weight: 600;
         color: var(--text);
       }
 
-      /* Card */
+      .sec-sub {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 2px;
+      }
+
+      /* ── Cards ────────────────────────────────────── */
       .card {
-        background: var(--bg-secondary);
+        background: var(--bg-card);
         border: 1px solid var(--border);
         border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 12px;
+        padding: 13px 15px;
+        margin-bottom: 8px;
+        transition: background 0.12s, border-color 0.12s;
+      }
+
+      .card:hover {
+        background: var(--bg-card-hover);
+        border-color: rgba(183, 148, 244, 0.18);
       }
 
       .card-row {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 12px;
       }
 
-      .card-title {
+      .card-name {
         font-weight: 600;
         color: var(--text);
-        margin-bottom: 4px;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 7px;
       }
 
-      .card-subtitle {
+      .card-meta {
         font-size: 11px;
         color: var(--text-muted);
+        margin-top: 3px;
+        font-family: var(--font-mono);
       }
 
-      /* Status dot */
-      .status {
+      .card-actions {
+        display: flex;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+
+      /* Host card variant */
+      .host-card {
+        background: linear-gradient(
+          135deg,
+          rgba(183, 148, 244, 0.07) 0%,
+          rgba(183, 148, 244, 0.02) 100%
+        );
+        border: 1px solid rgba(183, 148, 244, 0.18);
+        border-radius: 8px;
+        padding: 13px 15px;
+        margin-bottom: 12px;
+      }
+
+      /* ── Status dots ──────────────────────────────── */
+      .dot {
         display: inline-block;
-        width: 8px;
-        height: 8px;
+        width: 7px;
+        height: 7px;
         border-radius: 50%;
-        margin-right: 6px;
+        flex-shrink: 0;
       }
 
-      .status-online {
+      .dot-green {
         background: var(--green);
-        box-shadow: 0 0 6px var(--green);
+        box-shadow: 0 0 0 2px rgba(126, 200, 164, 0.18);
       }
 
-      .status-offline {
+      .dot-red {
+        background: var(--red);
+      }
+
+      .dot-muted {
         background: var(--text-muted);
       }
 
-      /* Button */
+      .dot-yellow {
+        background: var(--yellow);
+      }
+
+      /* ── Buttons ──────────────────────────────────── */
       .btn {
-        padding: 5px 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 11px;
         border-radius: 5px;
         border: none;
         cursor: pointer;
         font-size: 12px;
         font-weight: 500;
-        transition: opacity 0.1s;
+        line-height: 1;
+        transition: opacity 0.1s, background 0.1s;
+        font-family: inherit;
+        white-space: nowrap;
+        flex-shrink: 0;
       }
 
       .btn:hover {
         opacity: 0.85;
       }
 
+      .btn:active {
+        opacity: 0.7;
+      }
+
+      .btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
       .btn-primary {
         background: var(--accent);
-        color: #12111a;
+        color: #0c0b15;
       }
 
       .btn-danger {
         background: var(--red);
-        color: #12111a;
+        color: #0c0b15;
       }
 
       .btn-ghost {
-        background: var(--bg-tertiary);
-        color: var(--text-muted);
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-dim);
         border: 1px solid var(--border);
       }
 
-      /* Empty state */
-      .empty-state {
+      .btn-icon {
+        background: transparent;
+        color: var(--text-muted);
+        padding: 4px 7px;
+        font-size: 13px;
+      }
+
+      .btn-icon:hover {
+        color: var(--red);
+        background: rgba(242, 139, 130, 0.1);
+      }
+
+      /* ── Empty states ─────────────────────────────── */
+      .empty {
         text-align: center;
-        padding: 48px 24px;
+        padding: 52px 24px;
         color: var(--text-muted);
       }
 
-      .empty-state .icon {
-        font-size: 32px;
+      .empty-icon {
+        font-size: 34px;
         margin-bottom: 12px;
+        display: block;
+        opacity: 0.55;
       }
 
-      /* Settings form */
-      .form-group {
-        margin-bottom: 20px;
+      .empty-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-dim);
+        margin-bottom: 6px;
+      }
+
+      .empty-desc {
+        font-size: 12px;
+        line-height: 1.55;
+        max-width: 280px;
+        margin: 0 auto;
+      }
+
+      /* ── Spinner ──────────────────────────────────── */
+      .spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.65s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ── Inline confirm ───────────────────────────── */
+      .confirm-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .confirm-msg {
+        font-size: 12px;
+        color: var(--red);
+        flex: 1;
+        line-height: 1.4;
+      }
+
+      /* ── Pairing card ─────────────────────────────── */
+      .pair-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 28px;
+        text-align: center;
+        max-width: 380px;
+      }
+
+      .pair-card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 22px;
+      }
+
+      .pair-title {
+        font-weight: 600;
+        font-size: 14px;
+      }
+
+      .pin-label {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+      }
+
+      .pin-display {
+        font-size: 30px;
+        font-weight: 800;
+        font-family: var(--font-mono);
+        letter-spacing: 0.25em;
+        color: var(--accent);
+        padding: 6px 0;
+      }
+
+      .pair-countdown {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 10px;
+      }
+
+      .pair-countdown span {
+        font-family: var(--font-mono);
+        color: var(--text-dim);
+      }
+
+      /* ── Tunnel cards ─────────────────────────────── */
+      .tunnel-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 18px;
+        margin-bottom: 10px;
+        transition: background 0.12s, border-color 0.12s;
+      }
+
+      .tunnel-card:hover {
+        background: var(--bg-card-hover);
+        border-color: rgba(183, 148, 244, 0.18);
+      }
+
+      .tunnel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+
+      .tunnel-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--text);
+      }
+
+      .tunnel-desc {
+        font-size: 12px;
+        color: var(--text-muted);
+        line-height: 1.55;
+        margin-bottom: 14px;
+      }
+
+      /* ── Settings ─────────────────────────────────── */
+      .settings-group {
+        margin-bottom: 28px;
+      }
+
+      .settings-group-title {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+
+      .form-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 15px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        margin-bottom: 6px;
+        gap: 16px;
+        transition: border-color 0.12s;
+      }
+
+      .form-row:hover {
+        border-color: rgba(183, 148, 244, 0.15);
       }
 
       .form-label {
-        display: block;
         font-weight: 500;
-        color: var(--text-muted);
-        margin-bottom: 6px;
+        color: var(--text);
+        font-size: 13px;
+      }
+
+      .form-desc {
         font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        margin-top: 2px;
       }
 
       .form-input {
-        width: 100%;
-        max-width: 300px;
-        background: var(--bg-secondary);
+        background: var(--bg-input);
         border: 1px solid var(--border);
         border-radius: 5px;
         color: var(--text);
-        padding: 7px 10px;
-        font-size: 13px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-family: var(--font-mono);
         outline: none;
-        transition: border-color 0.1s;
+        transition: border-color 0.12s;
+        width: 160px;
+        text-align: right;
       }
 
       .form-input:focus {
@@ -252,306 +686,449 @@
       }
 
       .toggle {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        cursor: pointer;
-      }
-
-      .toggle input[type='checkbox'] {
-        width: 36px;
-        height: 20px;
+        width: 34px;
+        height: 19px;
         appearance: none;
-        background: var(--bg-tertiary);
+        background: var(--bg-input);
+        border: 1px solid var(--border);
         border-radius: 10px;
         cursor: pointer;
         position: relative;
-        transition: background 0.2s;
+        transition: background 0.2s, border-color 0.2s;
+        flex-shrink: 0;
       }
 
-      .toggle input[type='checkbox']:checked {
+      .toggle:checked {
         background: var(--accent-dim);
+        border-color: var(--accent-dim);
       }
 
-      .toggle input[type='checkbox']::after {
+      .toggle::after {
         content: '';
         position: absolute;
-        width: 14px;
-        height: 14px;
-        background: var(--text);
+        width: 13px;
+        height: 13px;
+        background: white;
         border-radius: 50%;
-        top: 3px;
-        left: 3px;
-        transition: transform 0.2s;
+        top: 2px;
+        left: 2px;
+        transition: transform 0.18s;
       }
 
-      .toggle input[type='checkbox']:checked::after {
-        transform: translateX(16px);
+      .toggle:checked::after {
+        transform: translateX(15px);
       }
 
-      /* Error banner */
-      .error-banner {
-        background: rgba(242, 139, 130, 0.15);
-        border: 1px solid var(--red);
-        border-radius: 6px;
-        padding: 10px 14px;
-        margin-bottom: 16px;
-        color: var(--red);
-        font-size: 12px;
-        display: none;
+      .about-row {
+        font-size: 11.5px;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 6px;
       }
 
-      .error-banner.show {
-        display: block;
+      .about-row a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      .about-row a:hover {
+        text-decoration: underline;
       }
     </style>
   </head>
   <body>
-    <div class="title-bar">
-      <h1>WARREN</h1>
-    </div>
+    <div class="app">
+      <!-- Title bar -->
+      <div class="titlebar">
+        <div class="titlebar-brand">🐇 WARREN</div>
+        <div class="titlebar-section" id="titlebar-section">Devices</div>
+      </div>
 
-    <div class="app-layout">
-      <!-- Sidebar Navigation -->
-      <nav class="sidebar">
-        <div class="nav-item active" data-tab="devices">
-          <span class="icon">⬡</span>
-          Devices
-        </div>
-        <div class="nav-item" data-tab="sessions">
-          <span class="icon">▸</span>
-          Sessions
-        </div>
-        <div class="nav-item" data-tab="tunnels">
-          <span class="icon">⤨</span>
-          Tunnels
-        </div>
-        <div class="nav-item" data-tab="settings">
-          <span class="icon">⚙</span>
-          Settings
-        </div>
-      </nav>
-
-      <!-- Main Content -->
-      <main class="main-content">
-        <div id="error-banner" class="error-banner"></div>
-
-        <!-- Devices Tab -->
-        <section id="tab-devices" class="tab-panel active">
-          <div class="section-header">
-            <h2>Devices</h2>
-            <button type="button" class="btn btn-primary" onclick="_pairNewDevice()">+ Pair Device</button>
-          </div>
-          <div id="devices-list">
-            <div class="empty-state">
-              <div class="icon">📱</div>
-              <p>No paired devices yet</p>
-              <p style="font-size: 11px; margin-top: 6px">
-                Click "Pair Device" or use the tray icon to show a QR code
-              </p>
+      <div class="body">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+          <div class="nav">
+            <div class="nav-item active" data-tab="devices">
+              <span class="nav-icon">⬡</span>
+              Devices
+              <span class="nav-badge" id="badge-devices"></span>
+            </div>
+            <div class="nav-item" data-tab="sessions">
+              <span class="nav-icon">▸</span>
+              Sessions
+              <span class="nav-badge" id="badge-sessions"></span>
+            </div>
+            <div class="nav-item" data-tab="tunnels">
+              <span class="nav-icon">⇌</span>
+              Tunnels
+            </div>
+            <div class="nav-item" data-tab="connections">
+              <span class="nav-icon">◉</span>
+              Connections
+            </div>
+            <div class="nav-item" data-tab="settings">
+              <span class="nav-icon">⚙</span>
+              Settings
             </div>
           </div>
-        </section>
 
-        <!-- Sessions Tab -->
-        <section id="tab-sessions" class="tab-panel">
-          <div class="section-header">
-            <h2>Active Sessions</h2>
-            <button type="button" class="btn btn-ghost" onclick="refreshSessions()">↻ Refresh</button>
-          </div>
-          <div id="sessions-list">
-            <div class="empty-state">
-              <div class="icon">⬛</div>
-              <p>No active sessions</p>
+          <div class="sidebar-footer">
+            <div class="server-status">
+              <div class="status-dot" id="srv-dot"></div>
+              <span class="server-label" id="srv-label">Connecting…</span>
             </div>
+            <div class="server-meta" id="srv-meta">localhost:9470</div>
           </div>
-        </section>
+        </nav>
 
-        <!-- Tunnels Tab -->
-        <section id="tab-tunnels" class="tab-panel">
-          <div class="section-header">
-            <h2>Remote Access Tunnels</h2>
-          </div>
-          <div class="card">
-            <div class="card-title">Cloudflare Tunnel</div>
-            <div class="card-subtitle" style="margin-bottom: 12px">
-              Expose your Warren host to the internet via Cloudflare's free tunnel service.
-            </div>
-            <button type="button" class="btn btn-primary">Set Up Cloudflare Tunnel</button>
-          </div>
-          <div class="card">
-            <div class="card-title">Tailscale</div>
-            <div class="card-subtitle" style="margin-bottom: 12px">
-              Join a Tailscale mesh network — Warren is auto-discovered on your tailnet.
-            </div>
-            <button type="button" class="btn btn-primary">Set Up Tailscale</button>
-          </div>
-          <p
-            style="
-              font-size: 11px;
-              color: var(--text-muted);
-              margin-top: 16px;
-              text-align: center;
-            "
-          >
-            Tunnel setup guides open in your browser. Warren does not relay your traffic.
-          </p>
-        </section>
+        <!-- Main -->
+        <div class="main">
+          <div id="notif" class="notif"></div>
 
-        <!-- Settings Tab -->
-        <section id="tab-settings" class="tab-panel">
-          <div class="section-header">
-            <h2>Settings</h2>
-          </div>
+          <div class="scroll">
+            <!-- ── Devices ──────────────────────────── -->
+            <section id="tab-devices" class="tab active">
+              <div class="sec-head">
+                <div>
+                  <div class="sec-title">Devices</div>
+                  <div class="sec-sub">Paired devices that can connect to this Mac</div>
+                </div>
+                <button type="button" class="btn btn-primary" onclick="_pairNewDevice()">
+                  + Pair Device
+                </button>
+              </div>
+              <div id="devices-list">
+                <div class="empty"><span class="spinner"></span></div>
+              </div>
+            </section>
 
-          <div class="form-group">
-            <label class="form-label">Default Shell</label>
-            <input
-              type="text"
-              class="form-input"
-              id="setting-shell"
-              placeholder="/bin/zsh"
-              onchange="_saveSetting('shell', this.value)"
-            />
-          </div>
+            <!-- ── Sessions ────────────────────────── -->
+            <section id="tab-sessions" class="tab">
+              <div class="sec-head">
+                <div>
+                  <div class="sec-title">Active Sessions</div>
+                  <div class="sec-sub">Live terminal sessions from paired devices</div>
+                </div>
+                <button type="button" class="btn btn-ghost" onclick="refreshSessions()">
+                  ↻ Refresh
+                </button>
+              </div>
+              <div id="sessions-list">
+                <div class="empty">
+                  <span class="empty-icon">⬛</span>
+                  <div class="empty-title">No active sessions</div>
+                </div>
+              </div>
+            </section>
 
-          <div class="form-group">
-            <label class="form-label">Port</label>
-            <input
-              type="number"
-              class="form-input"
-              id="setting-port"
-              placeholder="9470"
-              onchange="_saveSetting('port', parseInt(this.value))"
-            />
-          </div>
+            <!-- ── Tunnels ─────────────────────────── -->
+            <section id="tab-tunnels" class="tab">
+              <div class="sec-head">
+                <div>
+                  <div class="sec-title">Remote Access Tunnels</div>
+                  <div class="sec-sub">Expose this Warren host securely over the internet</div>
+                </div>
+              </div>
 
-          <div class="form-group">
-            <label class="toggle">
-              <input
-                type="checkbox"
-                id="setting-host-mode"
-                onchange="_saveSetting('hostMode', this.checked)"
-              />
-              <span>Host Mode</span>
-            </label>
-            <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; margin-left: 46px">
-              Allow other Warren devices to connect to this machine
-            </p>
-          </div>
+              <div class="tunnel-card">
+                <div class="tunnel-head">
+                  <div class="tunnel-name">☁ Cloudflare Tunnel</div>
+                  <span class="dot dot-muted"></span>
+                </div>
+                <div class="tunnel-desc">
+                  Expose your Warren host to the internet via Cloudflare's free tunnel service. No
+                  open ports or router configuration needed.
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  onclick="openTunnel('cloudflare')"
+                >
+                  Set Up Cloudflare Tunnel ↗
+                </button>
+              </div>
 
-          <div class="form-group">
-            <label class="toggle">
-              <input
-                type="checkbox"
-                id="setting-logging"
-                onchange="_saveSetting('logging', this.checked)"
-              />
-              <span>Session Logging</span>
-            </label>
-            <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; margin-left: 46px">
-              Log terminal sessions to ~/.warren/logs/ (opt-in)
-            </p>
-          </div>
+              <div class="tunnel-card">
+                <div class="tunnel-head">
+                  <div class="tunnel-name">⚡ Tailscale</div>
+                  <span class="dot dot-muted"></span>
+                </div>
+                <div class="tunnel-desc">
+                  Join a Tailscale mesh VPN — Warren is auto-discovered on your tailnet. Works
+                  behind firewalls and NAT.
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  onclick="openTunnel('tailscale')"
+                >
+                  Set Up Tailscale ↗
+                </button>
+              </div>
 
-          <div class="form-group" style="margin-top: 32px">
-            <div style="color: var(--text-muted); font-size: 11px">
-              Warren v0.1.0 · MIT License · <a
-                href="https://warren.sh"
-                style="color: var(--accent); text-decoration: none"
-                >warren.sh</a
+              <p
+                style="
+                  font-size: 11px;
+                  color: var(--text-muted);
+                  text-align: center;
+                  margin-top: 16px;
+                  line-height: 1.6;
+                "
               >
-            </div>
+                Tunnel setup guides open in your browser.<br />Warren does not relay or inspect
+                your traffic.
+              </p>
+            </section>
+
+            <!-- ── Connections ─────────────────────── -->
+            <section id="tab-connections" class="tab">
+              <div class="sec-head">
+                <div>
+                  <div class="sec-title">Local Network</div>
+                  <div class="sec-sub">
+                    Other Warren hosts discovered on your LAN via mDNS
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-ghost"
+                  id="discover-btn"
+                  onclick="refreshConnections()"
+                >
+                  ⊙ Scan
+                </button>
+              </div>
+              <div id="connections-list">
+                <div class="empty">
+                  <span class="empty-icon">🐰</span>
+                  <div class="empty-title">No other Warrens found</div>
+                  <div class="empty-desc">
+                    Click Scan to discover other Warren hosts on your local network.
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- ── Settings ────────────────────────── -->
+            <section id="tab-settings" class="tab">
+              <div class="sec-head">
+                <div>
+                  <div class="sec-title">Settings</div>
+                  <div class="sec-sub">Configure your Warren host</div>
+                </div>
+              </div>
+
+              <div class="settings-group">
+                <div class="settings-group-title">Server</div>
+
+                <div class="form-row">
+                  <div>
+                    <div class="form-label">Port</div>
+                    <div class="form-desc">Restart required after changing</div>
+                  </div>
+                  <input
+                    type="number"
+                    class="form-input"
+                    id="setting-port"
+                    placeholder="9470"
+                    onchange="_saveSetting('port', parseInt(this.value))"
+                  />
+                </div>
+
+                <div class="form-row">
+                  <div>
+                    <div class="form-label">Host Mode</div>
+                    <div class="form-desc">Accept incoming terminal sessions</div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    class="toggle"
+                    id="setting-host-mode"
+                    onchange="_saveSetting('hostMode', this.checked)"
+                  />
+                </div>
+              </div>
+
+              <div class="settings-group">
+                <div class="settings-group-title">Terminal</div>
+
+                <div class="form-row">
+                  <div>
+                    <div class="form-label">Default Shell</div>
+                    <div class="form-desc">Shell for new terminal sessions</div>
+                  </div>
+                  <input
+                    type="text"
+                    class="form-input"
+                    id="setting-shell"
+                    placeholder="/bin/zsh"
+                    onchange="_saveSetting('shell', this.value)"
+                  />
+                </div>
+
+                <div class="form-row">
+                  <div>
+                    <div class="form-label">Session Logging</div>
+                    <div class="form-desc">Save logs to ~/.warren/logs/</div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    class="toggle"
+                    id="setting-logging"
+                    onchange="_saveSetting('logging', this.checked)"
+                  />
+                </div>
+              </div>
+
+              <div class="settings-group">
+                <div class="settings-group-title">About</div>
+                <div class="form-row">
+                  <div class="about-row">
+                    🐇 Warren · MIT License ·
+                    <a href="https://warren.sh">warren.sh</a>
+                  </div>
+                  <div
+                    style="
+                      font-size: 11px;
+                      color: var(--text-muted);
+                      font-family: var(--font-mono);
+                    "
+                    id="about-version"
+                  >
+                    v0.2.0
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
-        </section>
-      </main>
+        </div>
+      </div>
     </div>
 
     <script src="index.js"></script>
     <script>
-      // Tab navigation
+      // ── Tab navigation ───────────────────────────────
+      const TAB_LABELS = {
+        devices: 'Devices',
+        sessions: 'Sessions',
+        tunnels: 'Tunnels',
+        connections: 'Connections',
+        settings: 'Settings',
+      }
+
       document.querySelectorAll('.nav-item').forEach((item) => {
         item.addEventListener('click', () => {
           const tab = item.dataset.tab
-
           document.querySelectorAll('.nav-item').forEach((n) => { n.classList.remove('active') })
-          document.querySelectorAll('.tab-panel').forEach((p) => { p.classList.remove('active') })
-
+          document.querySelectorAll('.tab').forEach((p) => { p.classList.remove('active') })
           item.classList.add('active')
           document.getElementById(`tab-${tab}`).classList.add('active')
-
+          document.getElementById('titlebar-section').textContent = TAB_LABELS[tab] || tab
           if (tab === 'sessions') refreshSessions()
           if (tab === 'devices') refreshDevices()
+          if (tab === 'connections') refreshConnections()
+          if (tab === 'settings') loadSettings()
         })
       })
 
-      // Initial load
-      refreshDevices()
-      loadSettings()
+      // ── Notifications ────────────────────────────────
+      let _notifTimer = null
 
-      async function refreshDevices() {
-        const list = document.getElementById('devices-list')
+      function notify(msg, type = 'info', autoDismiss = true) {
+        const el = document.getElementById('notif')
+        el.textContent = msg
+        el.className = `notif ${type} show`
+        if (_notifTimer) clearTimeout(_notifTimer)
+        if (autoDismiss) _notifTimer = setTimeout(() => el.classList.remove('show'), 4000)
+      }
+
+      // ── Sidebar server status ────────────────────────
+      async function updateSidebarStatus() {
+        const dot = document.getElementById('srv-dot')
+        const label = document.getElementById('srv-label')
+        const meta = document.getElementById('srv-meta')
         try {
-          const [health, devices] = await Promise.all([api.health(), api.devices()])
-          const deviceCards = devices.map((d) => `
-            <div class="card" id="device-${d.id}">
-              <div class="card-row">
-                <div>
-                  <div class="card-title">
-                    <span class="status ${d.permission === 'full' ? 'status-online' : 'status-offline'}"></span>${d.name}
-                  </div>
-                  <div class="card-subtitle">
-                    Last seen ${new Date(d.lastSeen).toLocaleString()} ·
-                    ${d.permission === 'revoked' ? '<span style="color:var(--red)">revoked</span>' : 'full access'}
-                  </div>
-                </div>
-                <button type="button" class="btn" style="background:transparent;color:var(--red);font-size:16px;padding:4px 8px;border:none" title="Remove device" onclick="deleteDevice('${d.id}', '${d.name}')">🗑</button>
-              </div>
-            </div>
-          `).join('')
-
-          list.innerHTML = `
-            <div class="card">
-              <div class="card-row">
-                <div>
-                  <div class="card-title">
-                    <span class="status status-online"></span>This Mac
-                  </div>
-                  <div class="card-subtitle">Host · v${health.version} · ${health.sessions} active session(s)</div>
-                </div>
-              </div>
-            </div>
-            ${deviceCards || '<div class="empty-state" style="margin-top:16px"><div class="icon">📱</div><p>No paired devices yet</p></div>'}
-          `
-        } catch (e) {
-          showError(`Cannot connect to Warren server: ${e.message}`)
+          const h = await api.health()
+          dot.classList.add('online')
+          label.textContent = 'Running'
+          meta.textContent = `localhost:9470 · v${h.version}`
+          document.getElementById('about-version').textContent = `v${h.version}`
+        } catch {
+          dot.classList.remove('online')
+          label.textContent = 'Offline'
         }
       }
 
-      async function refreshSessions() {
-        const list = document.getElementById('sessions-list')
+      // ── Devices ──────────────────────────────────────
+      async function refreshDevices() {
+        const list = document.getElementById('devices-list')
+        list.innerHTML = `<div class="empty"><span class="spinner"></span></div>`
         try {
-          const sessions = await api.sessions()
-          if (sessions.length === 0) {
-            list.innerHTML = `<div class="empty-state"><div class="icon">⬛</div><p>No active sessions</p></div>`
-            return
-          }
-          list.innerHTML = sessions.map((s) => `
-            <div class="card" id="session-${s.id}">
+          const [health, devices] = await Promise.all([api.health(), api.devices()])
+
+          const badge = document.getElementById('badge-devices')
+          const full = devices.filter((d) => d.permission === 'full')
+          badge.textContent = full.length
+          badge.style.display = full.length > 0 ? '' : 'none'
+
+          const hostCard = `
+            <div class="host-card">
               <div class="card-row">
                 <div>
-                  <div class="card-title">${s.shell.split('/').pop()} — ${s.cols}×${s.rows}</div>
-                  <div class="card-subtitle">
-                    Device ${s.deviceId.slice(0, 8)} ·
-                    Started ${new Date(s.startedAt).toLocaleTimeString()}
+                  <div class="card-name">
+                    <span class="dot dot-green"></span>This Mac
+                  </div>
+                  <div class="card-meta">host · v${health.version} · ${health.sessions} session${health.sessions !== 1 ? 's' : ''} · uptime ${fmtUptime(health.uptime)}</div>
+                </div>
+              </div>
+            </div>`
+
+          if (devices.length === 0) {
+            list.innerHTML =
+              hostCard +
+              `<div class="empty">
+                <span class="empty-icon">📱</span>
+                <div class="empty-title">No paired devices</div>
+                <div class="empty-desc">Click "Pair Device" to add a phone or tablet.</div>
+              </div>`
+            return
+          }
+
+          list.innerHTML =
+            hostCard +
+            devices
+              .map(
+                (d) => `
+            <div class="card" id="device-${d.id}">
+              <div class="card-row">
+                <div>
+                  <div class="card-name">
+                    <span class="dot ${d.permission === 'full' ? 'dot-green' : 'dot-red'}"></span>
+                    ${escHtml(d.name)}
+                  </div>
+                  <div class="card-meta">
+                    ${d.permission === 'revoked' ? '<span style="color:var(--red)">revoked</span>' : 'full access'}
+                    · paired ${fmtDate(d.pairedAt)}
+                    · seen ${fmtDate(d.lastSeen)}
                   </div>
                 </div>
-                <button type="button" class="btn" style="background:transparent;color:var(--red);font-size:16px;padding:4px 8px;border:none" title="Kill session" onclick="killSession('${s.id}')">✕</button>
+                <div class="card-actions">
+                  <button type="button" class="btn btn-icon" title="Remove device"
+                    onclick="deleteDevice('${d.id}', '${escJs(d.name)}')">🗑</button>
+                </div>
               </div>
-            </div>
-          `).join('')
-        } catch {
-          list.innerHTML = `<div class="empty-state"><div class="icon">⬛</div><p>No active sessions</p></div>`
+            </div>`,
+              )
+              .join('')
+        } catch (e) {
+          notify(`Cannot connect to Warren server: ${e.message}`, 'error', false)
+          list.innerHTML = `
+            <div class="empty">
+              <span class="empty-icon">⚠️</span>
+              <div class="empty-title">Server unreachable</div>
+              <div class="empty-desc">${escHtml(e.message)}</div>
+            </div>`
         }
       }
 
@@ -563,7 +1140,7 @@
           const data = await api.startPairing()
           showPairingCard(data)
         } catch (e) {
-          showError(`Could not start pairing: ${e.message}`)
+          notify(`Could not start pairing: ${e.message}`, 'error')
         } finally {
           btn.disabled = false
           btn.textContent = '+ Pair Device'
@@ -574,31 +1151,28 @@
         const list = document.getElementById('devices-list')
         const expiresIn = Math.floor((data.expiresAt - Date.now()) / 1000)
         list.innerHTML = `
-          <div class="card" style="text-align:center">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-              <div class="card-title">Scan to pair</div>
+          <div class="pair-card">
+            <div class="pair-card-head">
+              <div class="pair-title">Scan to pair</div>
               <button type="button" class="btn btn-ghost" onclick="cancelPairing()">Cancel</button>
             </div>
-            <div id="qr-container" style="display:inline-block;background:#12111a;padding:12px;border-radius:8px;margin-bottom:12px">
+            <div id="qr-container" style="display:inline-block;background:#0c0b15;padding:14px;border-radius:10px;margin-bottom:18px;border:1px solid var(--border)">
               ${data.qrSvg}
             </div>
-            <div style="margin-bottom:8px">
-              <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em">PIN</div>
-              <div style="font-size:28px;font-weight:700;font-family:monospace;letter-spacing:.2em;color:var(--accent)">${data.pin}</div>
-            </div>
-            <div style="font-size:11px;color:var(--text-muted)">
+            <div class="pin-label">PIN</div>
+            <div class="pin-display">${data.pin}</div>
+            <div class="pair-countdown">
               Expires in <span id="pair-countdown">${expiresIn}</span>s
             </div>
-          </div>
-        `
+          </div>`
 
-        let knownDeviceCount = null
-
-        // Poll for new device + countdown
+        let knownCount = null
         const interval = setInterval(async () => {
           const el = document.getElementById('pair-countdown')
-          if (!el) { clearInterval(interval); return }
-
+          if (!el) {
+            clearInterval(interval)
+            return
+          }
           const remaining = Math.floor((data.expiresAt - Date.now()) / 1000)
           if (remaining <= 0) {
             clearInterval(interval)
@@ -606,19 +1180,17 @@
             return
           }
           el.textContent = remaining
-
-          // Detect new paired device
           try {
             const devices = await api.devices()
-            if (knownDeviceCount === null) {
-              knownDeviceCount = devices.length
-            } else if (devices.length > knownDeviceCount) {
+            if (knownCount === null) {
+              knownCount = devices.length
+            } else if (devices.length > knownCount) {
               clearInterval(interval)
-              showInfo(`Device paired successfully`)
+              notify('Device paired successfully!', 'success')
               refreshDevices()
             }
           } catch {
-            // server temporarily unreachable — keep polling
+            // keep polling
           }
         }, 2000)
       }
@@ -627,92 +1199,243 @@
         refreshDevices()
       }
 
-      function _saveSetting(key, value) {
-        // TODO: Save via IPC to main process → config.ts
-        console.log('Setting:', key, '=', value)
+      function deleteDevice(id, name) {
+        const card = document.getElementById(`device-${id}`)
+        if (!card) return
+        card.innerHTML = `
+          <div class="confirm-row">
+            <div class="confirm-msg">Remove <strong>${escHtml(name)}</strong>? This device can no longer connect.</div>
+            <div class="card-actions">
+              <button type="button" class="btn btn-ghost" onclick="refreshDevices()">Cancel</button>
+              <button type="button" class="btn btn-danger" onclick="confirmDeleteDevice('${id}', '${escJs(name)}')">Remove</button>
+            </div>
+          </div>`
       }
 
-      async function loadSettings() {
+      async function confirmDeleteDevice(id, name) {
         try {
-          const data = await api.health()
-          // Populate from returned config
-        } catch {
-          // Server not available
+          await api.deleteDevice(id)
+          document.getElementById(`device-${id}`)?.remove()
+          notify(`Device "${name}" removed`, 'info')
+        } catch (e) {
+          notify(`Failed to remove device: ${e.message}`, 'error')
+          refreshDevices()
         }
       }
 
-      function showError(msg) {
-        const banner = document.getElementById('error-banner')
-        banner.textContent = msg
-        banner.style.borderColor = 'var(--red)'
-        banner.style.color = 'var(--red)'
-        banner.classList.add('show')
+      // ── Sessions ─────────────────────────────────────
+      async function refreshSessions() {
+        const list = document.getElementById('sessions-list')
+        list.innerHTML = `<div class="empty"><span class="spinner"></span></div>`
+        try {
+          const sessions = await api.sessions()
+          const badge = document.getElementById('badge-sessions')
+          badge.textContent = sessions.length
+          badge.style.display = sessions.length > 0 ? '' : 'none'
+
+          if (sessions.length === 0) {
+            list.innerHTML = `
+              <div class="empty">
+                <span class="empty-icon">⬛</span>
+                <div class="empty-title">No active sessions</div>
+                <div class="empty-desc">Sessions appear here when a paired device opens a terminal.</div>
+              </div>`
+            return
+          }
+
+          list.innerHTML = sessions
+            .map(
+              (s) => `
+            <div class="card" id="session-${s.id}">
+              <div class="card-row">
+                <div>
+                  <div class="card-name">
+                    <span class="dot dot-green"></span>
+                    ${escHtml(s.shell.split('/').pop())} — ${s.cols}×${s.rows}
+                  </div>
+                  <div class="card-meta">
+                    device ${s.deviceId.slice(0, 8)} · started ${new Date(s.startedAt).toLocaleTimeString()}
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <button type="button" class="btn btn-icon" title="Kill session"
+                    onclick="killSession('${s.id}')">✕</button>
+                </div>
+              </div>
+            </div>`,
+            )
+            .join('')
+        } catch {
+          list.innerHTML = `
+            <div class="empty">
+              <span class="empty-icon">⬛</span>
+              <div class="empty-title">No active sessions</div>
+            </div>`
+        }
       }
 
       function killSession(id) {
         const card = document.getElementById(`session-${id}`)
         if (!card) return
         card.innerHTML = `
-          <div class="card-row">
-            <div style="color:var(--red);font-size:12px">Kill this terminal session?</div>
-            <div style="display:flex;gap:8px;flex-shrink:0;margin-left:12px">
+          <div class="confirm-row">
+            <div class="confirm-msg">Kill this terminal session?</div>
+            <div class="card-actions">
               <button type="button" class="btn btn-ghost" onclick="refreshSessions()">Cancel</button>
               <button type="button" class="btn btn-danger" onclick="confirmKillSession('${id}')">Kill</button>
             </div>
-          </div>
-        `
+          </div>`
       }
 
       async function confirmKillSession(id) {
         try {
           await api.killSession(id)
-          const card = document.getElementById(`session-${id}`)
-          if (card) card.remove()
+          document.getElementById(`session-${id}`)?.remove()
           const list = document.getElementById('sessions-list')
           if (!list.querySelector('.card')) {
-            list.innerHTML = `<div class="empty-state"><div class="icon">⬛</div><p>No active sessions</p></div>`
+            list.innerHTML = `
+              <div class="empty">
+                <span class="empty-icon">⬛</span>
+                <div class="empty-title">No active sessions</div>
+              </div>`
           }
         } catch (e) {
-          showError(`Failed to kill session: ${e.message}`)
+          notify(`Failed to kill session: ${e.message}`, 'error')
           refreshSessions()
         }
       }
 
-      function deleteDevice(id, name) {
-        const card = document.getElementById(`device-${id}`)
-        if (!card) return
-        // Replace card content with inline confirmation
-        card.innerHTML = `
-          <div class="card-row">
-            <div style="color:var(--red);font-size:12px">Remove <strong>${name}</strong>? This device will no longer be able to connect.</div>
-            <div style="display:flex;gap:8px;flex-shrink:0;margin-left:12px">
-              <button type="button" class="btn btn-ghost" onclick="refreshDevices()">Cancel</button>
-              <button type="button" class="btn btn-danger" onclick="confirmDeleteDevice('${id}', '${name}')">Remove</button>
-            </div>
-          </div>
-        `
+      // ── Tunnels ──────────────────────────────────────
+      function openTunnel(type) {
+        const urls = {
+          cloudflare:
+            'https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/',
+          tailscale: 'https://tailscale.com/download',
+        }
+        if (urls[type]) window.open(urls[type])
       }
 
-      async function confirmDeleteDevice(id, name) {
+      // ── Connections ──────────────────────────────────
+      async function refreshConnections() {
+        const list = document.getElementById('connections-list')
+        const btn = document.getElementById('discover-btn')
+        btn.disabled = true
+        btn.innerHTML = '<span class="spinner"></span> Scanning…'
+        list.innerHTML = `
+          <div class="empty">
+            <span class="spinner"></span>
+            <div class="empty-title" style="margin-top:12px">Scanning local network…</div>
+            <div class="empty-desc">This takes up to 3 seconds.</div>
+          </div>`
         try {
-          await api.deleteDevice(id)
-          const card = document.getElementById(`device-${id}`)
-          if (card) card.remove()
-          showInfo(`Device "${name}" removed`)
+          const nodes = await api.discover()
+          btn.disabled = false
+          btn.innerHTML = '⊙ Scan'
+          if (nodes.length === 0) {
+            list.innerHTML = `
+              <div class="empty">
+                <span class="empty-icon">🐰</span>
+                <div class="empty-title">No other Warrens found</div>
+                <div class="empty-desc">Make sure Host Mode is enabled on other Macs and they are on the same network.</div>
+              </div>`
+            return
+          }
+          list.innerHTML = nodes
+            .map(
+              (n) => `
+            <div class="card">
+              <div class="card-row">
+                <div>
+                  <div class="card-name">
+                    <span class="dot ${n.hostMode ? 'dot-green' : 'dot-muted'}"></span>
+                    ${escHtml(n.hostName)}
+                  </div>
+                  <div class="card-meta">
+                    ${n.hostMode ? 'host mode' : 'no host mode'}
+                    · :${n.port}
+                    · v${n.version}
+                    · ${n.nodeId.slice(0, 8)}
+                  </div>
+                </div>
+                <button type="button" class="btn btn-ghost"
+                  onclick="connectToNode('${escJs(n.hostName)}', ${n.port})">Open ↗</button>
+              </div>
+            </div>`,
+            )
+            .join('')
         } catch (e) {
-          showError(`Failed to remove device: ${e.message}`)
-          refreshDevices()
+          btn.disabled = false
+          btn.innerHTML = '⊙ Scan'
+          notify(`Discovery failed: ${e.message}`, 'error')
+          list.innerHTML = `
+            <div class="empty">
+              <span class="empty-icon">⚠️</span>
+              <div class="empty-title">Discovery failed</div>
+              <div class="empty-desc">${escHtml(e.message)}</div>
+            </div>`
         }
       }
 
-      function showInfo(msg) {
-        const banner = document.getElementById('error-banner')
-        banner.textContent = msg
-        banner.style.borderColor = 'var(--accent)'
-        banner.style.color = 'var(--accent)'
-        banner.classList.add('show')
-        setTimeout(() => banner.classList.remove('show'), 4000)
+      function connectToNode(hostname, port) {
+        window.open(`http://${hostname}.local:${port}`)
       }
+
+      // ── Settings ─────────────────────────────────────
+      async function loadSettings() {
+        try {
+          const cfg = await api.getConfig()
+          document.getElementById('setting-shell').value = cfg.shell || ''
+          document.getElementById('setting-port').value = cfg.port || 9470
+          document.getElementById('setting-host-mode').checked = !!cfg.hostMode
+          document.getElementById('setting-logging').checked = !!cfg.logging
+        } catch {
+          // server not available yet
+        }
+      }
+
+      async function _saveSetting(key, value) {
+        try {
+          await api.updateConfig({ [key]: value })
+          notify('Settings saved', 'success')
+        } catch (e) {
+          notify(`Failed to save: ${e.message}`, 'error')
+        }
+      }
+
+      // ── Helpers ──────────────────────────────────────
+      function fmtDate(ts) {
+        const diff = Date.now() - ts
+        if (diff < 60000) return 'just now'
+        if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`
+        if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`
+        return new Date(ts).toLocaleDateString()
+      }
+
+      function fmtUptime(seconds) {
+        if (seconds < 60) return `${seconds}s`
+        if (seconds < 3600) return `${Math.floor(seconds / 60)}m`
+        return `${Math.floor(seconds / 3600)}h`
+      }
+
+      function escHtml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;')
+      }
+
+      // Escape for use inside JS string literals in onclick attributes
+      function escJs(str) {
+        return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+      }
+
+      // ── Init ─────────────────────────────────────────
+      updateSidebarStatus()
+      setInterval(updateSidebarStatus, 30_000)
+      refreshDevices()
+      loadSettings()
     </script>
   </body>
 </html>

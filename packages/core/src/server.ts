@@ -13,7 +13,7 @@ import { join } from 'node:path'
 import type { EncryptedPayload, WarrenConfig, WsMessage } from '@warren/types'
 import type { ServerWebSocket } from 'bun'
 import { validateToken } from './auth'
-import { loadConfig } from './config'
+import { loadConfig, updateConfig } from './config'
 import {
   decrypt,
   deriveSharedSecret,
@@ -284,7 +284,7 @@ async function handleMessage(ws: ServerWebSocket<WsData>, raw: string): Promise<
 // ---------------------------------------------------------------------------
 
 export function startServer(options: ServerOptions) {
-  const config = options.config ?? loadConfig()
+  let config = options.config ?? loadConfig()
   const port = options.port ?? config.port ?? 9470
   const staticDir = options.staticDir ?? null
   const serverToken = options.token ?? ''
@@ -300,7 +300,7 @@ export function startServer(options: ServerOptions) {
         return new Response(null, {
           headers: {
             'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+            'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
             'Access-Control-Allow-Headers': 'Content-Type',
           },
         })
@@ -421,6 +421,32 @@ export function startServer(options: ServerOptions) {
         return new Response(JSON.stringify(nodes), {
           headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
         })
+      }
+
+      // Config read endpoint
+      if (url.pathname === '/api/config' && req.method === 'GET') {
+        const { shell, port: cfgPort, hostMode, theme, logging } = config
+        return new Response(JSON.stringify({ shell, port: cfgPort, hostMode, theme, logging }), {
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        })
+      }
+
+      // Config update endpoint
+      if (url.pathname === '/api/config' && req.method === 'PATCH') {
+        try {
+          const partial = (await req.json()) as Partial<WarrenConfig>
+          // Exclude nodeId from updates — it's an immutable identity field
+          const { nodeId: _nodeId, ...safe } = partial as WarrenConfig
+          config = updateConfig(safe)
+          return new Response(JSON.stringify({ ok: true }), {
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+          })
+        } catch {
+          return new Response(JSON.stringify({ ok: false, error: 'Invalid request body' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+          })
+        }
       }
 
       // Health endpoint
