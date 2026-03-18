@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { clearPin, getPinTimeout, isPinSet, setPin, setPinTimeout, verifyPin } from '@/lib/pin-lock'
 import { getAllTerminals } from '@/lib/terminal-store'
 import { applyThemeEverywhere, getTheme, listAvailableThemes } from '@/lib/theme'
 
@@ -41,6 +42,8 @@ function SettingsPage() {
             ))}
           </div>
         </section>
+
+        <PinSection />
 
         <div className="text-center text-xs text-muted-foreground/40 pt-4">Warren v0.1.0 · MIT</div>
       </div>
@@ -132,6 +135,226 @@ function ThemeCard({
         </div>
       )}
     </button>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// PIN Security Section
+// ---------------------------------------------------------------------------
+
+const TIMEOUT_OPTIONS = [1, 5, 10, 30, 60] as const
+
+type PinFlow =
+  | 'idle'
+  | 'set-new'
+  | 'confirm-new'
+  | 'verify-current'
+  | 'change-new'
+  | 'confirm-change'
+  | 'remove-verify'
+
+function PinSection() {
+  const [pinEnabled, setPinEnabled] = useState(isPinSet)
+  const [flow, setFlow] = useState<PinFlow>('idle')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (flow !== 'idle') inputRef.current?.focus()
+  }, [flow])
+  const [input, setInput] = useState('')
+  const [pending, setPending] = useState('')
+  const [error, setError] = useState('')
+  const [timeout, setTimeout_] = useState(getPinTimeout)
+
+  function reset() {
+    setFlow('idle')
+    setInput('')
+    setPending('')
+    setError('')
+  }
+
+  function handleToggle() {
+    if (pinEnabled) {
+      setFlow('remove-verify')
+      setInput('')
+      setError('')
+    } else {
+      setFlow('set-new')
+      setInput('')
+      setError('')
+    }
+  }
+
+  function handleSubmit() {
+    if (flow === 'set-new') {
+      if (input.length < 4) {
+        setError('PIN must be 4–6 digits')
+        return
+      }
+      setPending(input)
+      setInput('')
+      setError('')
+      setFlow('confirm-new')
+    } else if (flow === 'confirm-new') {
+      if (input !== pending) {
+        setError("PINs don't match")
+        setInput('')
+        return
+      }
+      setPin(input)
+      setPinEnabled(true)
+      reset()
+    } else if (flow === 'verify-current') {
+      if (!verifyPin(input)) {
+        setError('Incorrect PIN')
+        setInput('')
+        return
+      }
+      setInput('')
+      setError('')
+      setFlow('change-new')
+    } else if (flow === 'change-new') {
+      if (input.length < 4) {
+        setError('PIN must be 4–6 digits')
+        return
+      }
+      setPending(input)
+      setInput('')
+      setError('')
+      setFlow('confirm-change')
+    } else if (flow === 'confirm-change') {
+      if (input !== pending) {
+        setError("PINs don't match")
+        setInput('')
+        return
+      }
+      setPin(input)
+      reset()
+    } else if (flow === 'remove-verify') {
+      if (!verifyPin(input)) {
+        setError('Incorrect PIN')
+        setInput('')
+        return
+      }
+      clearPin()
+      setPinEnabled(false)
+      reset()
+    }
+  }
+
+  function handleTimeoutChange(minutes: number) {
+    setTimeout_(minutes)
+    setPinTimeout(minutes)
+  }
+
+  const flowLabel: Record<PinFlow, string> = {
+    idle: '',
+    'set-new': 'Enter new PIN (4–6 digits)',
+    'confirm-new': 'Confirm new PIN',
+    'verify-current': 'Enter current PIN',
+    'change-new': 'Enter new PIN (4–6 digits)',
+    'confirm-change': 'Confirm new PIN',
+    'remove-verify': 'Enter current PIN to disable',
+  }
+
+  return (
+    <section>
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
+        Security
+      </p>
+
+      <div className="rounded-xl border border-border overflow-hidden">
+        {/* PIN toggle row */}
+        <div className="flex items-center justify-between px-4 py-3">
+          <div>
+            <p className="text-sm font-medium">PIN Lock</p>
+            <p className="text-xs text-muted-foreground">Require PIN to open the app</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleToggle}
+            className="relative w-10 h-6 rounded-full transition-colors"
+            style={{ background: pinEnabled ? '#b794f4' : '#333' }}
+            aria-label={pinEnabled ? 'Disable PIN' : 'Enable PIN'}
+          >
+            <span
+              className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform"
+              style={{ transform: pinEnabled ? 'translateX(18px)' : 'translateX(2px)' }}
+            />
+          </button>
+        </div>
+
+        {/* PIN flow input */}
+        {flow !== 'idle' && (
+          <div className="px-4 pb-3 border-t border-border pt-3 space-y-2">
+            <p className="text-xs text-muted-foreground">{flowLabel[flow]}</p>
+            <div className="flex gap-2">
+              <input
+                ref={inputRef}
+                type="password"
+                inputMode="numeric"
+                maxLength={6}
+                value={input}
+                onChange={(e) => setInput(e.target.value.replace(/\D/g, ''))}
+                onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+                placeholder="••••"
+                className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary"
+              />
+              <button
+                type="button"
+                onClick={handleSubmit}
+                className="px-4 py-2 rounded-lg bg-primary text-background text-sm font-semibold"
+              >
+                OK
+              </button>
+              <button
+                type="button"
+                onClick={reset}
+                className="px-3 py-2 rounded-lg border border-border text-sm text-muted-foreground"
+              >
+                ✕
+              </button>
+            </div>
+            {error && <p className="text-xs text-destructive">{error}</p>}
+          </div>
+        )}
+
+        {/* Change PIN (only when enabled and idle) */}
+        {pinEnabled && flow === 'idle' && (
+          <div className="px-4 py-2.5 border-t border-border">
+            <button
+              type="button"
+              onClick={() => {
+                setFlow('verify-current')
+                setInput('')
+                setError('')
+              }}
+              className="text-sm text-primary hover:underline"
+            >
+              Change PIN
+            </button>
+          </div>
+        )}
+
+        {/* Auto-lock timeout */}
+        {pinEnabled && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+            <p className="text-sm text-muted-foreground">Auto-lock after</p>
+            <select
+              value={timeout}
+              onChange={(e) => handleTimeoutChange(Number(e.target.value))}
+              className="bg-background border border-border rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-primary"
+            >
+              {TIMEOUT_OPTIONS.map((m) => (
+                <option key={m} value={m}>
+                  {m === 1 ? '1 min' : `${m} mins`}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
+    </section>
   )
 }
 

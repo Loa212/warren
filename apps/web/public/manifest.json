@@ -1,6 +1,8 @@
 {
   "name": "Warren Terminal",
   "short_name": "Warren",
+  "id": "/",
+  "scope": "/",
   "description": "Your terminal is too powerful to be a black box.",
   "start_url": "/",
   "display": "standalone",
