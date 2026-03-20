@@ -273,12 +273,12 @@ function PinSection() {
           <button
             type="button"
             onClick={handleToggle}
-            className="relative w-11 h-6 rounded-full transition-colors overflow-hidden shrink-0"
+            className="relative inline-flex w-11 h-6 rounded-full transition-colors shrink-0"
             style={{ background: pinEnabled ? '#b794f4' : '#333' }}
             aria-label={pinEnabled ? 'Disable PIN' : 'Enable PIN'}
           >
             <span
-              className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform"
+              className="absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200"
               style={{ transform: pinEnabled ? 'translateX(20px)' : 'translateX(0)' }}
             />
           </button>
