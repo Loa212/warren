@@ -140,6 +140,19 @@ export interface WarrenServiceInfo {
 }
 
 // ---------------------------------------------------------------------------
+// Tunnels
+// ---------------------------------------------------------------------------
+
+export type TunnelProvider = 'cloudflare' | 'tailscale'
+
+export interface TunnelProviderStatus {
+  provider: TunnelProvider
+  installed: boolean
+  running: boolean
+  url: string | null
+}
+
+// ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
 

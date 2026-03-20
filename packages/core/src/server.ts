@@ -31,6 +31,7 @@ import {
 import { advertise, destroyDiscovery, discoverOnce } from './discovery'
 import { generateQrSvg, startPairing, validatePairingNonce } from './pairing'
 import * as ptyManager from './pty'
+import { getTunnelStatus } from './tunnels'
 
 const VERSION = '0.2.0'
 const START_TIME = Date.now()
@@ -447,6 +448,14 @@ export function startServer(options: ServerOptions) {
             headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
           })
         }
+      }
+
+      // Tunnel status endpoint
+      if (url.pathname === '/api/tunnels/status') {
+        const statuses = await getTunnelStatus(port)
+        return new Response(JSON.stringify(statuses), {
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        })
       }
 
       // Health endpoint

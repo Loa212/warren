@@ -100,11 +100,11 @@ SheetTitle.displayName = 'SheetTitle'
 
 export {
   Sheet,
-  SheetTrigger,
   SheetClose,
-  SheetPortal,
-  SheetOverlay,
   SheetContent,
   SheetHeader,
+  SheetOverlay,
+  SheetPortal,
   SheetTitle,
+  SheetTrigger,
 }

@@ -192,4 +192,4 @@ export function secretFromBase64(b64: string): SharedSecret {
   }
 }
 
-export { toBase64, fromBase64 }
+export { fromBase64, toBase64 }

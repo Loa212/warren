@@ -624,6 +624,211 @@
         margin-bottom: 14px;
       }
 
+      .tunnel-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 9px;
+        border-radius: 10px;
+        font-family: var(--font-mono);
+      }
+
+      .tunnel-status-badge.not-installed {
+        background: rgba(82, 78, 110, 0.2);
+        color: var(--text-muted);
+      }
+
+      .tunnel-status-badge.installed {
+        background: rgba(246, 193, 119, 0.12);
+        color: var(--yellow);
+      }
+
+      .tunnel-status-badge.running {
+        background: rgba(126, 200, 164, 0.12);
+        color: var(--green);
+      }
+
+      .tunnel-actions {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .tunnel-url-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 14px;
+        padding: 8px 12px;
+        background: rgba(126, 200, 164, 0.06);
+        border: 1px solid rgba(126, 200, 164, 0.2);
+        border-radius: 6px;
+      }
+
+      .tunnel-url-label {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        flex-shrink: 0;
+      }
+
+      .tunnel-url-value {
+        font-size: 12px;
+        font-family: var(--font-mono);
+        color: var(--green);
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .btn-copy {
+        background: rgba(126, 200, 164, 0.15);
+        color: var(--green);
+        border: 1px solid rgba(126, 200, 164, 0.25);
+        padding: 3px 9px;
+        font-size: 11px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-family: inherit;
+        font-weight: 500;
+        transition: opacity 0.1s;
+        white-space: nowrap;
+      }
+
+      .btn-copy:hover { opacity: 0.8; }
+
+      .btn-referral {
+        background: transparent;
+        color: var(--accent);
+        border: 1px solid rgba(183, 148, 244, 0.3);
+        padding: 5px 11px;
+        font-size: 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-family: inherit;
+        font-weight: 500;
+        transition: background 0.1s, opacity 0.1s;
+        white-space: nowrap;
+      }
+
+      .btn-referral:hover {
+        background: rgba(183, 148, 244, 0.08);
+        opacity: 0.9;
+      }
+
+      .guide-toggle {
+        background: transparent;
+        border: none;
+        color: var(--text-dim);
+        font-size: 12px;
+        cursor: pointer;
+        padding: 5px 0;
+        font-family: inherit;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: color 0.1s;
+      }
+
+      .guide-toggle:hover { color: var(--accent); }
+
+      .guide-toggle-arrow {
+        display: inline-block;
+        transition: transform 0.2s;
+        font-size: 10px;
+      }
+
+      .guide-toggle-arrow.open {
+        transform: rotate(90deg);
+      }
+
+      .guide-steps {
+        display: none;
+        margin-top: 14px;
+        padding: 14px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border);
+        border-radius: 7px;
+      }
+
+      .guide-steps.open { display: block; }
+
+      .guide-step {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .guide-step:last-child { margin-bottom: 0; }
+
+      .step-num {
+        width: 22px;
+        height: 22px;
+        background: var(--accent-dim);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+
+      .step-content {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .step-title {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 4px;
+      }
+
+      .step-desc {
+        font-size: 11.5px;
+        color: var(--text-muted);
+        line-height: 1.5;
+        margin-bottom: 6px;
+      }
+
+      .step-code {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 7px 10px;
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        color: var(--accent);
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+
+      .step-code-text {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .step-code .btn-copy {
+        flex-shrink: 0;
+        font-size: 10px;
+        padding: 2px 7px;
+      }
+
       /* ── Settings ─────────────────────────────────── */
       .settings-group {
         margin-bottom: 28px;
@@ -829,56 +1034,13 @@
                   <div class="sec-title">Remote Access Tunnels</div>
                   <div class="sec-sub">Expose this Warren host securely over the internet</div>
                 </div>
-              </div>
-
-              <div class="tunnel-card">
-                <div class="tunnel-head">
-                  <div class="tunnel-name">☁ Cloudflare Tunnel</div>
-                  <span class="dot dot-muted"></span>
-                </div>
-                <div class="tunnel-desc">
-                  Expose your Warren host to the internet via Cloudflare's free tunnel service. No
-                  open ports or router configuration needed.
-                </div>
-                <button
-                  type="button"
-                  class="btn btn-primary"
-                  onclick="openTunnel('cloudflare')"
-                >
-                  Set Up Cloudflare Tunnel ↗
+                <button type="button" class="btn btn-ghost" onclick="refreshTunnels()">
+                  ↻ Refresh
                 </button>
               </div>
-
-              <div class="tunnel-card">
-                <div class="tunnel-head">
-                  <div class="tunnel-name">⚡ Tailscale</div>
-                  <span class="dot dot-muted"></span>
-                </div>
-                <div class="tunnel-desc">
-                  Join a Tailscale mesh VPN — Warren is auto-discovered on your tailnet. Works
-                  behind firewalls and NAT.
-                </div>
-                <button
-                  type="button"
-                  class="btn btn-primary"
-                  onclick="openTunnel('tailscale')"
-                >
-                  Set Up Tailscale ↗
-                </button>
+              <div id="tunnels-list">
+                <div class="empty"><span class="spinner"></span></div>
               </div>
-
-              <p
-                style="
-                  font-size: 11px;
-                  color: var(--text-muted);
-                  text-align: center;
-                  margin-top: 16px;
-                  line-height: 1.6;
-                "
-              >
-                Tunnel setup guides open in your browser.<br />Warren does not relay or inspect
-                your traffic.
-              </p>
             </section>
 
             <!-- ── Connections ─────────────────────── -->
@@ -1027,6 +1189,7 @@
           document.getElementById('titlebar-section').textContent = TAB_LABELS[tab] || tab
           if (tab === 'sessions') refreshSessions()
           if (tab === 'devices') refreshDevices()
+          if (tab === 'tunnels') refreshTunnels()
           if (tab === 'connections') refreshConnections()
           if (tab === 'settings') loadSettings()
         })
@@ -1306,13 +1469,171 @@
       }
 
       // ── Tunnels ──────────────────────────────────────
-      function openTunnel(type) {
-        const urls = {
-          cloudflare:
-            'https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/',
-          tailscale: 'https://tailscale.com/download',
+      const TUNNEL_REFERRAL_URLS = {
+        cloudflare: 'https://dash.cloudflare.com/sign-up?utm_source=warren&utm_medium=app',
+        tailscale: 'https://login.tailscale.com/start?utm_source=warren&utm_medium=app',
+      }
+
+      const TUNNEL_META = {
+        cloudflare: {
+          icon: '☁',
+          name: 'Cloudflare Tunnel',
+          desc: 'Expose your Warren host to the internet via Cloudflare\'s free tunnel service. No open ports or router configuration needed.',
+          steps: [
+            {
+              title: 'Create a Cloudflare account',
+              desc: 'Sign up for a free Cloudflare account if you don\'t have one.',
+              code: null,
+            },
+            {
+              title: 'Install cloudflared',
+              desc: 'The Cloudflare Tunnel client. Install via Homebrew or download from Cloudflare.',
+              code: 'brew install cloudflared',
+            },
+            {
+              title: 'Authenticate',
+              desc: 'Log in to your Cloudflare account from the terminal.',
+              code: 'cloudflared login',
+            },
+            {
+              title: 'Run a quick tunnel',
+              desc: 'Start a temporary tunnel pointing to your Warren server. You\'ll get a public URL.',
+              code: 'cloudflared tunnel --url http://localhost:9470',
+            },
+            {
+              title: 'For a permanent tunnel (optional)',
+              desc: 'Create a named tunnel and route it to a domain you own.',
+              code: 'cloudflared tunnel create warren',
+            },
+          ],
+        },
+        tailscale: {
+          icon: '⚡',
+          name: 'Tailscale',
+          desc: 'Join a Tailscale mesh VPN \u2014 Warren is accessible on your private tailnet. Works behind firewalls and NAT with zero config.',
+          steps: [
+            {
+              title: 'Create a Tailscale account',
+              desc: 'Sign up for a free Tailscale account if you don\'t have one.',
+              code: null,
+            },
+            {
+              title: 'Install Tailscale',
+              desc: 'Install the Tailscale client on this Mac.',
+              code: 'brew install tailscale',
+            },
+            {
+              title: 'Start Tailscale',
+              desc: 'Connect this machine to your tailnet.',
+              code: 'sudo tailscale up',
+            },
+            {
+              title: 'Access Warren remotely',
+              desc: 'From any device on your tailnet, open Warren using your Tailscale IP.',
+              code: 'http://<tailscale-ip>:9470',
+            },
+          ],
+        },
+      }
+
+      function tunnelStatusBadge(status) {
+        if (status.running) return '<span class="tunnel-status-badge running"><span class="dot dot-green"></span>Running</span>'
+        if (status.installed) return '<span class="tunnel-status-badge installed"><span class="dot dot-yellow"></span>Installed</span>'
+        return '<span class="tunnel-status-badge not-installed"><span class="dot dot-muted"></span>Not installed</span>'
+      }
+
+      function tunnelUrlRow(status) {
+        if (!status.url) return ''
+        return `
+          <div class="tunnel-url-row">
+            <span class="tunnel-url-label">URL</span>
+            <span class="tunnel-url-value">${escHtml(status.url)}</span>
+            <button type="button" class="btn-copy" onclick="copyTunnelUrl('${escJs(status.url)}')">Copy</button>
+          </div>`
+      }
+
+      function tunnelGuide(provider) {
+        const meta = TUNNEL_META[provider]
+        return `
+          <div class="guide-steps" id="guide-${provider}">
+            ${meta.steps.map((s, i) => `
+              <div class="guide-step">
+                <div class="step-num">${i + 1}</div>
+                <div class="step-content">
+                  <div class="step-title">${escHtml(s.title)}</div>
+                  <div class="step-desc">${escHtml(s.desc)}</div>
+                  ${s.code ? `
+                    <div class="step-code">
+                      <span class="step-code-text">${escHtml(s.code)}</span>
+                      <button type="button" class="btn-copy" onclick="copyTunnelUrl('${escJs(s.code)}')">Copy</button>
+                    </div>` : ''}
+                </div>
+              </div>`).join('')}
+          </div>`
+      }
+
+      function renderTunnelCard(provider, status) {
+        const meta = TUNNEL_META[provider]
+        return `
+          <div class="tunnel-card">
+            <div class="tunnel-head">
+              <div class="tunnel-name">${meta.icon} ${escHtml(meta.name)}</div>
+              ${tunnelStatusBadge(status)}
+            </div>
+            <div class="tunnel-desc">${escHtml(meta.desc)}</div>
+            ${tunnelUrlRow(status)}
+            <div class="tunnel-actions">
+              <button type="button" class="btn-referral" onclick="window.open('${escJs(TUNNEL_REFERRAL_URLS[provider])}')">
+                Sign Up ↗
+              </button>
+              <button type="button" class="guide-toggle" onclick="toggleGuide('${provider}')">
+                <span class="guide-toggle-arrow" id="arrow-${provider}">▸</span>
+                Setup Guide
+              </button>
+            </div>
+            ${tunnelGuide(provider)}
+          </div>`
+      }
+
+      async function refreshTunnels() {
+        const list = document.getElementById('tunnels-list')
+        list.innerHTML = '<div class="empty"><span class="spinner"></span></div>'
+        try {
+          const statuses = await api.tunnelStatus()
+          const statusMap = {}
+          for (const s of statuses) statusMap[s.provider] = s
+
+          list.innerHTML =
+            renderTunnelCard('cloudflare', statusMap.cloudflare || { provider: 'cloudflare', installed: false, running: false, url: null }) +
+            renderTunnelCard('tailscale', statusMap.tailscale || { provider: 'tailscale', installed: false, running: false, url: null }) +
+            '<p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:16px;line-height:1.6">' +
+            'Warren does not relay or inspect your traffic.<br>Tunnels run independently on your machine.' +
+            '</p>'
+        } catch (e) {
+          list.innerHTML =
+            renderTunnelCard('cloudflare', { provider: 'cloudflare', installed: false, running: false, url: null }) +
+            renderTunnelCard('tailscale', { provider: 'tailscale', installed: false, running: false, url: null }) +
+            '<p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:16px;line-height:1.6">' +
+            'Could not detect tunnel status. Guides are still available below.' +
+            '</p>'
         }
-        if (urls[type]) window.open(urls[type])
+      }
+
+      function toggleGuide(provider) {
+        const guide = document.getElementById(`guide-${provider}`)
+        const arrow = document.getElementById(`arrow-${provider}`)
+        if (!guide) return
+        const isOpen = guide.classList.contains('open')
+        guide.classList.toggle('open')
+        if (arrow) arrow.classList.toggle('open')
+      }
+
+      function copyTunnelUrl(text) {
+        navigator.clipboard.writeText(text).then(() => {
+          notify('Copied to clipboard', 'success')
+        }).catch(() => {
+          notify('Failed to copy', 'error')
+        })
       }
 
       // ── Connections ──────────────────────────────────
