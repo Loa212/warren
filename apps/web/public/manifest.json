@@ -1,6 +1,8 @@
 {
   "name": "Warren Terminal",
   "short_name": "Warren",
+  "id": "/",
+  "scope": "/",
   "description": "Your terminal is too powerful to be a black box.",
   "start_url": "/",
   "display": "standalone",
@@ -9,16 +11,25 @@
   "theme_color": "#12111a",
   "icons": [
     {
-      "src": "/icons/icon-192.svg",
+      "src": "/icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
     },
     {
       "src": "/icons/icon-512.svg",
-      "sizes": "512x512",
+      "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     }
   ],
   "categories": ["utilities", "productivity"]

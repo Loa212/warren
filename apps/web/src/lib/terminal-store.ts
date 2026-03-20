@@ -120,7 +120,11 @@ export function connectToHost(host: string, token: string, savedHost?: SavedHost
   })
 
   wsClient.onClose(() => {
-    dbg(`disconnected from ${host}`)
+    dbg(`disconnected from ${host} — cleaning up sessions`)
+    // Destroy all sessions for this host so stale terminals don't linger
+    for (const [id, state] of sessions) {
+      if (state.host === host) destroySession(id)
+    }
     emit()
   })
 
