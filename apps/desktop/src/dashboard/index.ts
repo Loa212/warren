@@ -67,6 +67,13 @@ export interface ConfigResponse {
   logging: boolean
 }
 
+export interface TunnelProviderStatus {
+  provider: 'cloudflare' | 'tailscale'
+  installed: boolean
+  running: boolean
+  url: string | null
+}
+
 const api = {
   health(): Promise<HealthResponse> {
     return request<HealthResponse>('/health')
@@ -109,6 +116,10 @@ const api = {
       method: 'PATCH',
       body: JSON.stringify(partial),
     })
+  },
+
+  tunnelStatus(): Promise<TunnelProviderStatus[]> {
+    return request<TunnelProviderStatus[]>('/api/tunnels/status')
   },
 }
 
