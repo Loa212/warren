@@ -19,6 +19,7 @@
     "paths": {
       "@warren/types": ["../types/src/index.ts"],
       "@warren/core": ["../core/src/index.ts"],
+      "@warren/sdk": ["../sdk/src/index.ts"],
       "@warren/themes": ["../themes/src/index.ts"]
     }
   }
