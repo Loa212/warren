@@ -38,7 +38,7 @@ jobs:
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
-      - run: bun test packages/core
+      - run: bun test packages/core packages/cli
 
   build:
     name: Build
